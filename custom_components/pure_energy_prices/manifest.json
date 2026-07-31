@@ -1,0 +1,9 @@
+{
+  "domain": "pure_energy_prices",
+  "name": "Pure Energie Prices",
+  "version": "0.1.0",
+  "documentation": "https://github.com/venraij/hacs-pure-energy-prices",
+  "dependencies": [],
+  "iot_class": "cloud_polling",
+  "requirements": []
+}
