@@ -39,6 +39,7 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All( # type: ignore
                     int, vol.Range(min=60, max=86400)
                 ),
+                vol.Optional(CONF_COMMODITY, default="electricity"): vol.In(["electricity", "gas"]), # type: ignore
             }
         )
 
