@@ -59,9 +59,22 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as resp:
                     resp.raise_for_status()
+
+                    # Check status first (200 is OK!)
+                    if not resp.ok:
+                        text = await resp.text()
+                        raise UpdateFailed(f"HTTP error {resp.status}: {text[:500]}")
+               
                     payload = await resp.json()
+
+                    _LOGGER.debug("Got %d prices from Pure Energie API", len(payload.get('prices', [])))
+
         except Exception as e:
             raise UpdateFailed(f"Failed to fetch Pure Energie prices: {e}") from e
 
-        prices = payload.get("prices", []) or []
+        prices = payload.get("prices") or []
+
+        if not isinstance(prices, list):
+            _LOGGER.warning("Expected list of price objects but got %s", type(prices))
+
         return PureEnergyData(prices)
