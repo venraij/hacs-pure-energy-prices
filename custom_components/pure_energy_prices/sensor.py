@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -7,9 +8,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
 )
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.device_registry import DeviceInfo
 from voluptuous import Any
 
 from custom_components.pure_energy_prices.const import DOMAIN
@@ -36,6 +36,12 @@ async def async_setup_entry(
 
     # Create the sensors.
     async_add_entities(sensors)
+
+@dataclass
+class PureEnergyData:
+    """Class to hold your data."""
+
+    prices: list[dict[str, Any]]
 
 class PureEnergyPricesSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
     _attr_name = "Pure Energie prices"

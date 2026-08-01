@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from custom_components.pure_energy_prices import PureEnergyData
+from custom_components.pure_energy_prices.sensor import PureEnergyData
 
 from .const import (
     BASE_URL,
@@ -25,6 +25,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type PureEnergieConfigEntry = ConfigEntry[PureEnergyData]
 
 class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
