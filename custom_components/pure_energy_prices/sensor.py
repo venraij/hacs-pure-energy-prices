@@ -39,7 +39,7 @@ async def async_setup_entry(
 
 class PureEnergyPricesSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
     _attr_name = "Pure Energie prices"
-    _attr_unique_id = "pure_energy_prices"
+    _attr_unique_id = "pure_energy_prices_test"
     _attr_unit_of_measurement = "€/kWh"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_value = None
