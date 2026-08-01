@@ -36,13 +36,7 @@ async def async_setup_entry(
 
     # Create the sensors.
     async_add_entities(sensors)
-
-@dataclass
-class PureEnergyData:
-    """Class to hold your data."""
-
-    prices: list[dict[str, Any]]
-
+    
 class PureEnergyPricesSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
     _attr_name = "Pure Energie prices"
     _attr_unique_id = "pure_energy_prices_test"
