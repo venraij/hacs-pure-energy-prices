@@ -7,6 +7,7 @@ CONF_SOLAR_PANELS = "solar_panels"
 CONF_BUSINESS = "business"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_COMMODITY = "commodity"
+CONF_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
 DEFAULT_ELEMENT_ID: int = 11480
 DEFAULT_DOUBLE_METER: bool = True
@@ -14,4 +15,5 @@ DEFAULT_SOLAR_PANELS: bool = True
 DEFAULT_BUSINESS: bool = False
 DEFAULT_SCAN_INTERVAL: int = 3600
 DEFAULT_COMMODITY: str = "electricity"
+DEFAULT_UNIT_OF_MEASUREMENT: str = "€/kWh"
 
