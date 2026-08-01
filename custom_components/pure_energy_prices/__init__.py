@@ -4,13 +4,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry
+from custom_components.pure_energy_prices.const import DOMAIN
 from custom_components.pure_energy_prices.coordinator import PureEnergieConfigEntry
 from custom_components.pure_energy_prices.sensor import PureEnergyCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> bool:
-    coordinator = PureEnergyCoordinator(hass, entry)
+    hass.data.setdefault(DOMAIN, {})
 
+    coordinator = PureEnergyCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     if not coordinator.data.prices:
         raise ConfigEntryNotReady("No prices data available from Pure Energie API")
