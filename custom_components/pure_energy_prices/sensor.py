@@ -31,8 +31,7 @@ async def async_setup_entry(
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
     sensors = [
-        PureEnergyCurrentPriceSensor(coordinator, config_entry),
-        PureEnergyPricesScheduleSensor(coordinator, config_entry)
+        PureEnergyPriceSensor(coordinator, config_entry)
     ]
 
     # Create the sensors.
