@@ -22,7 +22,7 @@ from .const import (
     CONF_SOLAR_PANELS,
     CONF_BUSINESS,
     CONF_SCAN_INTERVAL,
-    CONF_HORIZON_HOURS,
+    CONF_HORIZON_HOURS,  # int: 24 or 48
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,6 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
     def _build_current_param(self, current_dt) -> str:
         # Required format: Y-m-d H:i
         current_str = current_dt.strftime("%Y-%m-%d %H:%M")
-        # Make it safe for use inside a query string
         return urllib.parse.quote_plus(current_str)
 
     async def _fetch_prices(self, current_dt) -> list[dict[str, Any]]:
@@ -115,16 +114,12 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
         return prices
 
     async def _async_update_data(self) -> PureEnergyData:
-        horizon_hours = int(self.entry.data.get(CONF_HORIZON_HOURS, 24))
-        if horizon_hours not in (24, 48):
-            horizon_hours = 24
-
+        horizon_hours: int = int(self.entry.data.get(CONF_HORIZON_HOURS, 24))  # 24 or 48
         now_dt = dt_util.now()
 
         try:
             prices: list[dict[str, Any]] = await self._fetch_prices(now_dt)
 
-            # API returns 24h results only; for 48h we fetch the second window too.
             if horizon_hours == 48:
                 next_dt = now_dt + timedelta(hours=24)
                 more_prices = await self._fetch_prices(next_dt)
