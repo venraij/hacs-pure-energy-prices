@@ -31,14 +31,15 @@ async def async_setup_entry(
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
     sensors = [
-        PureEnergyPricesSensor(coordinator, config_entry)
+        PureEnergyCurrentPriceSensor(coordinator, config_entry),
+        PureEnergyPricesScheduleSensor(coordinator, config_entry)
     ]
 
     # Create the sensors.
     async_add_entities(sensors)
-class PureEnergyPricesSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
-    _attr_name = "Pure Energie prices"
-    _attr_unique_id = "pure_energy_prices_test"
+class PureEnergyCurrentPriceSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
+    _attr_name = "Pure Energie Current Price"
+    _attr_unique_id = "pure_energy_current_price"
     _attr_unit_of_measurement = "€/kWh"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_value = None
@@ -65,3 +66,34 @@ class PureEnergyPricesSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEnt
             return None
 
         return current.get("price")
+
+class PureEnergyPricesScheduleSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
+    _attr_name = "Pure Energie prices schedule"
+    _attr_unique_id = "pure_energy_prices_schedule"
+    _attr_unit_of_measurement = "€/kWh"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator: PureEnergyCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator)
+        self._entry = entry
+
+    @property
+    def native_value(self) -> float | None:
+        data = self.coordinator.data or {}
+        prices = data.prices or []
+
+        current = next(
+            (p for p in prices if p.get("date", {}).get("current") is True),
+            None,
+        )
+        return None if not current else current.get("price")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        data = self.coordinator.data or {}
+        prices = data.prices or []
+
+        # This is the full 24h payload
+        return {
+            "prices_24h": prices,
+        }
