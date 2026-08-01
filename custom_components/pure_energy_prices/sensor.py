@@ -57,8 +57,11 @@ class PureEnergyPricesSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEnt
         data = self.coordinator.data or {}
         prices = data.prices or []
 
-        current = next((p for p in prices if p.get("date", {}).get("current")), None)
-        if current is None:
+        current = next(
+            (p for p in prices if p.get("date", {}).get("current") is True),
+            None,
+        )
+        if not current:
             return None
 
         return current.get("price")
