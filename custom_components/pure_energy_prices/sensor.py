@@ -53,8 +53,12 @@ class PureEnergyPricesSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEnt
         self._entry = entry
 
     @property
-    def native_value(self) -> list[dict[str, Any]]:
-        # CoordinatorEntity updates on coordinator refresh, so this stays current.
+    def native_value(self) -> float | None:
         data = self.coordinator.data or {}
-        return data.prices;
+        prices = data.prices or []
 
+        current = next((p for p in prices if p.get("date", {}).get("current")), None)
+        if current is None:
+            return None
+
+        return current.get("price")
