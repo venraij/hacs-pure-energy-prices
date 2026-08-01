@@ -71,25 +71,13 @@ class PureEnergyPricesScheduleSensor(CoordinatorEntity[PureEnergyCoordinator], S
     _attr_name = "Pure Energie prices schedule"
     _attr_unique_id = "pure_energy_prices_schedule"
     _attr_unit_of_measurement = "€/kWh"
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator: PureEnergyCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self._entry = entry
 
     @property
-    def native_value(self) -> float | None:
-        data = self.coordinator.data or {}
-        prices = data.prices or []
-
-        current = next(
-            (p for p in prices if p.get("date", {}).get("current") is True),
-            None,
-        )
-        return None if not current else current.get("price")
-
-    @property
-    def extra_state_attributes(self) -> dict:
+    def native_value(self) -> dict:
         data = self.coordinator.data or {}
         prices = data.prices or []
 
