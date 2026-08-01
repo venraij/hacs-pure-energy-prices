@@ -20,7 +20,6 @@ from .const import (
     CONF_SOLAR_PANELS,
     CONF_BUSINESS,
     CONF_SCAN_INTERVAL,
-    CONF_COMMODITY
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +49,7 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
             f"{BASE_URL}"
             f"?double_meter={'true' if p.get(CONF_DOUBLE_METER, True) else 'false'}"
             f"&solar_panels={'true' if p.get(CONF_SOLAR_PANELS, True) else 'false'}"
-            f"&commodity={'gas' if p.get(CONF_COMMODITY, "gas") else 'electricity'}"
+            f"&commodity=electricity"
             f"&current=null"
             f"&business={'true' if p.get(CONF_BUSINESS, False) else 'false'}"
             f"&element_id={p.get(CONF_ELEMENT_ID)}"
