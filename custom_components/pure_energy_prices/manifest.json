@@ -3,8 +3,10 @@
   "name": "Pure Energie Prices",
   "version": "0.1.0",
   "documentation": "https://github.com/venraij/hacs-pure-energy-prices",
-  "integration_type": "hub",
+  "issue_tracker": "https://github.com/venraij/hacs-pure-energy-prices/issues",
+  "integration_type": "device",
   "iot_class": "cloud_polling",
   "config_flow": true,
-  "requirements": []
+  "codeowners": ["@VenRaij"]
+
 }

@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     UpdateFailed,
 )
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 
 from .const import (
     DOMAIN,
@@ -70,45 +70,9 @@ class PureEnergyPricesSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEnt
     _attr_name = "Pure Energie prices"
     _attr_unique_id = "pure_energy_prices"
     _attr_unit_of_measurement = "€/kWh"
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_value = None
 
     @property
     def native_value(self):
-        return None
-
-    @property
-    def extra_state_attributes(self):
-        return {"prices": self.coordinator.data.prices}
-
-class PureEnergyCurrentAllInSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
-    _attr_name = "Pure Energie current all-in price"
-    _attr_unique_id = "pure_energy_current_all_in_price"
-    _attr_unit_of_measurement = "€/kWh"
-
-    @property
-    def native_value(self):
-        prices = self.coordinator.data.prices or []
-        current = next(
-            (r for r in prices if r.get("date", {}).get("current") is True),
-            None,
-        )
-        if not current:
-            return None
-        return float(current.get("price", 0))
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities) -> None:
-    coordinator = PureEnergyCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
-
-    async_add_entities(
-        [
-            PureEnergyPricesSensor(coordinator),
-            PureEnergyCurrentAllInSensor(coordinator),
-        ]
-    )
-
-    # Keep a ref if you want debugging later
-    @callback
-    def _store():
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    _store()
+        return self.coordinator.data.prices
