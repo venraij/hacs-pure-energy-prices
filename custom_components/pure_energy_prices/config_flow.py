@@ -40,7 +40,7 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     int, vol.Range(min=60, max=86400)
                 ),
                 vol.Optional(CONF_COMMODITY, default="electricity"): vol.In(["electricity", "gas"]), # type: ignore
-                vol.Optional("unit_of_measurement", default="€/kWh"): vol.In(["€/kWh", "€/m³"]), # type: ignore
+                vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="€/kWh"): vol.In(["€/kWh", "€/m³"]) # type: ignore
             }
         )
 
