@@ -22,7 +22,7 @@ from .const import (
     CONF_SOLAR_PANELS,
     CONF_BUSINESS,
     CONF_SCAN_INTERVAL,
-    CONF_HORIZON_HOURS,  # <-- added
+    CONF_HORIZON_HOURS,
 )
 
 _LOGGER = logging.getLogger(__name__)
