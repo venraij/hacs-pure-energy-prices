@@ -1,70 +1,41 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-from datetime import timedelta
-from typing import Any
-
-import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
     CoordinatorEntity,
-    UpdateFailed,
 )
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from voluptuous import Any
 
-from .const import (
-    DOMAIN,
-    BASE_URL,
-    CONF_ELEMENT_ID,
-    CONF_DOUBLE_METER,
-    CONF_SOLAR_PANELS,
-    CONF_BUSINESS,
-    CONF_SCAN_INTERVAL,
-)
+from custom_components.pure_energy_prices.const import DOMAIN
+from custom_components.pure_energy_prices.coordinator import PureEnergyCoordinator
+
 
 _LOGGER = logging.getLogger(__name__)
 
-@dataclass
-class PureEnergyData:
-    prices: list[dict[str, Any]]
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    """Set up the Sensors."""
+    # This gets the data update coordinator from the config entry runtime data as specified in your __init__.py
+    coordinator: PureEnergyCoordinator = config_entry.runtime_data.coordinator
 
-class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        self.entry = entry
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Pure Energie Prices",
-            update_interval=timedelta(seconds=entry.data.get(CONF_SCAN_INTERVAL, 3600)),
-        )
-        self.data = PureEnergyData(prices=[])
+    # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
+    # to a list for each one.
+    # This maybe different in your specific case, depending on how your data is structured
+    sensors = [
+        PureEnergyPricesSensor(coordinator, config_entry)
+    ]
 
-    async def _async_update_data(self) -> PureEnergyData:
-        p = self.entry.data
-        url = (
-            f"{BASE_URL}"
-            f"?double_meter={'true' if p.get(CONF_DOUBLE_METER, True) else 'false'}"
-            f"&solar_panels={'true' if p.get(CONF_SOLAR_PANELS, True) else 'false'}"
-            f"&commodity=electricity"
-            f"&current=null"
-            f"&business={'true' if p.get(CONF_BUSINESS, False) else 'false'}"
-            f"&element_id={p.get(CONF_ELEMENT_ID)}"
-        )
-
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=30) as resp:
-                    resp.raise_for_status()
-                    payload = await resp.json()
-        except Exception as e:
-            raise UpdateFailed(f"Failed to fetch Pure Energie prices: {e}") from e
-
-        prices = payload.get("prices", []) or []
-        return PureEnergyData(prices=prices)
+    # Create the sensors.
+    async_add_entities(sensors)
 
 class PureEnergyPricesSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
     _attr_name = "Pure Energie prices"
@@ -72,7 +43,19 @@ class PureEnergyPricesSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEnt
     _attr_unit_of_measurement = "€/kWh"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_value = None
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: PureEnergyCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        super().__init__(coordinator)
+        self._entry = entry
 
     @property
-    def native_value(self):
-        return self.coordinator.data.prices
+    def native_value(self) -> list[dict[str, Any]]:
+        # CoordinatorEntity updates on coordinator refresh, so this stays current.
+        data = self.coordinator.data or {}
+        return data.prices;
+
