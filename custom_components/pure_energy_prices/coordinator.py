@@ -35,7 +35,7 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
             name="Pure Energie Prices",
             update_interval=timedelta(seconds=entry.data.get(CONF_SCAN_INTERVAL, 3600)),
         )
-        self.data = PureEnergyData(self, prices=[])
+        self.data = PureEnergyData([])
 
     async def _async_update_data(self) -> PureEnergyData:
         p = self.entry.data
@@ -58,4 +58,4 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
             raise UpdateFailed(f"Failed to fetch Pure Energie prices: {e}") from e
 
         prices = payload.get("prices", []) or []
-        return PureEnergyData(self, prices=prices)
+        return PureEnergyData(prices)
