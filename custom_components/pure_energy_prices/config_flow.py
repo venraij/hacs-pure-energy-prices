@@ -18,6 +18,7 @@ from .const import (
     DEFAULT_SOLAR_PANELS,
     DEFAULT_BUSINESS,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_HORIZON_HOURS,
 )
 
 class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -36,6 +37,7 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_DOUBLE_METER, default=DEFAULT_DOUBLE_METER): bool, # type: ignore
                 vol.Required(CONF_SOLAR_PANELS, default=DEFAULT_SOLAR_PANELS): bool, # type: ignore
                 vol.Required(CONF_BUSINESS, default=DEFAULT_BUSINESS): bool, # type: ignore
+                vol.Required(CONF_HORIZON_HOURS, default=DEFAULT_HORIZON_HOURS: int,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All( # type: ignore
                     int, vol.Range(min=60, max=86400)
                 ),
