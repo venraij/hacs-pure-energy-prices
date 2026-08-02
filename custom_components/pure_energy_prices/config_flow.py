@@ -18,6 +18,7 @@ from .const import (
     CONF_RETURN_COSTS,
     CONF_COMMODITY,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_PERCENTILES,
     DEFAULT_ELEMENT_ID,
     DEFAULT_DOUBLE_METER,
     DEFAULT_SOLAR_PANELS,
@@ -28,6 +29,7 @@ from .const import (
     DEFAULT_RETURN_COSTS,
     DEFAULT_COMMODITY,
     DEFAULT_UNIT_OF_MEASUREMENT,
+    DEFAULT_PERCENTILES,
 )
 
 class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -53,6 +55,10 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT_OF_MEASUREMENT): vol.In(["€/kWh", "€/m³"]), # type: ignore
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All( # type: ignore
                     int, vol.Range(min=60, max=86400)
+                ),
+                vol.Optional(CONF_PERCENTILES, default=DEFAULT_PERCENTILES): vol.All(
+                    vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
+                    [vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0))]
                 ),
             }
         )

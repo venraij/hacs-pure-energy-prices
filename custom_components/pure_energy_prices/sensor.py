@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 from .const import (
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_PERCENTILES,
 )
 
 async def async_setup_entry(
@@ -33,13 +34,16 @@ async def async_setup_entry(
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
-    sensors = [
+    sensors: list[SensorEntity] = [
         PureEnergyPriceSensor(coordinator, config_entry),
-        PureEnergyPercentileSensor(coordinator, config_entry, 0.05, "5% price low"),
-        PureEnergyPercentileSensor(coordinator, config_entry, 0.10, "10% price low"),
-        PureEnergyPercentileSensor(coordinator, config_entry, 0.25, "25% price low"),
-        PureEnergyPercentileSensor(coordinator, config_entry, 0.40, "40% price low"),
     ]
+
+    for percentile in config_entry.data.get(CONF_PERCENTILES, []):
+        sensors.append(
+            PureEnergyPercentileSensor(
+                coordinator, config_entry, percentile, f"{int(percentile * 100)}% price low"
+            )
+        )
 
     # Create the sensors.
     async_add_entities(sensors)
