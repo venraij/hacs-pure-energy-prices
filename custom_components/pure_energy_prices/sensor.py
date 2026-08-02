@@ -37,8 +37,8 @@ async def async_setup_entry(
         PureEnergyPriceSensor(coordinator, config_entry),
         PureEnergyPercentileSensor(coordinator, config_entry, 0.05, "5% price low"),
         PureEnergyPercentileSensor(coordinator, config_entry, 0.10, "10% price low"),
-        PureEnergyPercentileSensor(coordinator, config_entry, 0.20, "20% price low"),
         PureEnergyPercentileSensor(coordinator, config_entry, 0.25, "25% price low"),
+        PureEnergyPercentileSensor(coordinator, config_entry, 0.40, "40% price low"),
     ]
 
     # Create the sensors.
