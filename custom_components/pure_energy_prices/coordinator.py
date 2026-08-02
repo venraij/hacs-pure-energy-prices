@@ -23,6 +23,7 @@ from .const import (
     CONF_BUSINESS,
     CONF_SCAN_INTERVAL,
     CONF_HORIZON_HOURS,  # int: 24 or 48
+    CONF_ADDED_COSTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,6 +125,12 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
                 next_dt = now_dt + timedelta(hours=24)
                 more_prices = await self._fetch_prices(next_dt)
                 prices.extend(more_prices)
+
+            # for each price in the prices dict add CONF_ADDED_COSTS using map
+            added_costs: float = float(self.entry.data.get(CONF_ADDED_COSTS, 0.0))
+            if added_costs:
+                for record in prices:
+                    record["price"] = record.get("price", 0.0) + added_costs
 
         except Exception as e:
             raise UpdateFailed(f"Failed to fetch Pure Energie prices: {e}") from e

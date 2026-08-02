@@ -36,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 class PureEnergyPriceSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
     _attr_name = "Pure Energie Price"
-    _attr_unique_id = "pure_energy_price"
+    _attr_unique_id = "pure_energie_price" 
     _attr_unit_of_measurement = "€/kWh"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_value = None
@@ -71,5 +71,5 @@ class PureEnergyPriceSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEnti
 
         # This is the full 24h payload
         return {
-            "prices_24h": prices,
+            "prices": prices,
         }
