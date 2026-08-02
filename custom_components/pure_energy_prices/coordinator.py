@@ -64,8 +64,8 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
             f"{BASE_URL}"
             f"?double_meter={'true' if p.get(CONF_DOUBLE_METER, True) else 'false'}"
             f"&solar_panels={'true' if p.get(CONF_SOLAR_PANELS, True) else 'false'}"
-            f"&commodity=electricity"
-            f"&current={p.get(CONF_COMMODITY)}"
+            f"&commodity={p.get(CONF_COMMODITY)}"
+            f"&current={current_param}"
             f"&business={'true' if p.get(CONF_BUSINESS, False) else 'false'}"
             f"&element_id={p.get(CONF_ELEMENT_ID)}"
         )
