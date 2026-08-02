@@ -15,6 +15,7 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_HORIZON_HOURS,
     CONF_ADDED_COSTS,
+    CONF_RETURN_COSTS,
     DEFAULT_ELEMENT_ID,
     DEFAULT_DOUBLE_METER,
     DEFAULT_SOLAR_PANELS,
@@ -22,6 +23,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_HORIZON_HOURS,
     DEFAULT_ADDED_COSTS,
+    DEFAULT_RETURN_COSTS,
 )
 
 class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -41,7 +43,8 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SOLAR_PANELS, default=DEFAULT_SOLAR_PANELS): bool, # type: ignore
                 vol.Required(CONF_BUSINESS, default=DEFAULT_BUSINESS): bool, # type: ignore
                 vol.Required(CONF_HORIZON_HOURS, default=DEFAULT_HORIZON_HOURS): int,
-                vol.Required(CONF_ADDED_COSTS, default=DEFAULT_ADDED_COSTS): float, # type: ignore
+                vol.Optional(CONF_ADDED_COSTS, default=DEFAULT_ADDED_COSTS): float, # type: ignore
+                vol.Optional(CONF_RETURN_COSTS, default=DEFAULT_RETURN_COSTS): float, # type: ignore
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All( # type: ignore
                     int, vol.Range(min=60, max=86400)
                 ),
