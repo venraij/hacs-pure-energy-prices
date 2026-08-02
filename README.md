@@ -6,13 +6,16 @@ This integration is available via [HACS](https://hacs.xyz/).
 
 ## Features
 
-- **Dynamic Pricing Sensor**: Provides the current all-in electricity price per kWh.
+- **Dynamic Pricing Sensor**: Provides the current all-in price for your chosen commodity (electricity, gas, or redelivery).
+- **Percentile Price Sensors**: Monitor specific low-price percentiles (e.g., 5%, 10%, 20%, 25%) for the current day.
 - **Price History Attribute**: Exposes the full hourly price list as an attribute, making it easy to visualize trends.
 - **Configurable**: Supports various settings such as:
+  - Commodity selection (electricity, gas, or redelivery)
   - Double meter support
   - Solar panel configuration
   - Business vs. Residential profiles
   - Custom scan intervals
+  - Custom percentile monitoring
 - **HACS Ready**: Easy installation and updates through the Home Assistant Community Store.
 
 ## Installation
@@ -38,15 +41,21 @@ This integration is available via [HACS](https://hacs.xyz/).
 
 After restarting, go to **Settings** > **Devices & Services** > **Add Integration** and search for **Pure Energie Prices**.
 
-During setup, you will be prompted to provide your `element_id` (found in your Pure Energie account) and other relevant settings like whether you have a double meter or solar panels.
+During setup, you will be prompted to provide your `element_id` (found in your Pure Energie account) and other relevant settings, including:
+- **Commodity**: Choose between electricity, gas, or redelivery.
+- **Meter/Solar**: Specify if you have a double meter or solar panels.
+- **Percentiles**: Define which low-price percentiles you want to monitor (comma-separated).
 
 ## Usage
 
 ### Sensors
 
-The integration creates a sensor with the following characteristics:
+The integration creates several sensors with the following characteristics:
 
-- **State**: The current all-in electricity price (e.g., `0.25`).
+- **Pure Energie Price**: The current all-in electricity price (e.g., `0.25`).
+- **Percentile Price Sensors**: The price at a specific percentile for the current day (e.g., `5% price low`).
+
+**Common Attributes for all sensors:**
 - **Unit of Measurement**: `€/kWh`
 - **Attributes**:
   - `prices`: A list of dictionaries containing the hourly price data. Each dictionary typically includes:
