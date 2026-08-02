@@ -18,6 +18,7 @@ from .const import (
     CONF_RETURN_COSTS,
     CONF_COMMODITY,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_PERCENTILES,
     DEFAULT_ELEMENT_ID,
     DEFAULT_DOUBLE_METER,
     DEFAULT_SOLAR_PANELS,
@@ -28,6 +29,7 @@ from .const import (
     DEFAULT_RETURN_COSTS,
     DEFAULT_COMMODITY,
     DEFAULT_UNIT_OF_MEASUREMENT,
+    DEFAULT_PERCENTILES,
 )
 
 class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -35,6 +37,15 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         if user_input is not None:
+            # Convert comma-separated string to list of floats
+            if isinstance(user_input.get(CONF_PERCENTILES), str):
+                try:
+                    user_input[CONF_PERCENTILES] = [
+                        float(p.strip()) for p in user_input[CONF_PERCENTILES].split(",")
+                    ]
+                except ValueError:
+                    return self.async_abort()
+
             return self.async_create_entry(
                 title="Pure Energie Prices",
                 data=user_input,
@@ -54,6 +65,7 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All( # type: ignore
                     int, vol.Range(min=60, max=86400)
                 ),
+                vol.Optional(CONF_PERCENTILES, default=DEFAULT_PERCENTILES): str,
             }
         )
 

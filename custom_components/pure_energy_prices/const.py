@@ -11,6 +11,7 @@ CONF_ADDED_COSTS = "added_costs"
 CONF_RETURN_COSTS = "return_costs"
 CONF_COMMODITY = "commodity"
 CONF_UNIT_OF_MEASUREMENT = "unit_of_measurement"
+CONF_PERCENTILES = "percentiles"
 
 DEFAULT_ELEMENT_ID: int = 11480
 DEFAULT_DOUBLE_METER: bool = True
@@ -22,3 +23,4 @@ DEFAULT_ADDED_COSTS: float = 0.0
 DEFAULT_RETURN_COSTS: float = 0.0
 DEFAULT_COMMODITY: str = "electricity"
 DEFAULT_UNIT_OF_MEASUREMENT: str = "€/kWh"
+DEFAULT_PERCENTILES: str = "0.05, 0.1, 0.2, 0.4"
