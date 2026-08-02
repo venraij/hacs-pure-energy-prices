@@ -56,9 +56,9 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All( # type: ignore
                     int, vol.Range(min=60, max=86400)
                 ),
-                vol.Optional(CONF_PERCENTILES, default=DEFAULT_PERCENTILES): [
-                    vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0))
-                ],
+                vol.Optional(CONF_PERCENTILES, default=DEFAULT_PERCENTILES): vol.All(
+                    [vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0))]
+                ),
             }
         )
 
