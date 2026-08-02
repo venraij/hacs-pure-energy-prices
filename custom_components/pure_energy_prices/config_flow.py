@@ -16,6 +16,8 @@ from .const import (
     CONF_HORIZON_HOURS,
     CONF_ADDED_COSTS,
     CONF_RETURN_COSTS,
+    CONF_COMMODITY,
+    CONF_UNIT_OF_MEASUREMENT,
     DEFAULT_ELEMENT_ID,
     DEFAULT_DOUBLE_METER,
     DEFAULT_SOLAR_PANELS,
@@ -24,6 +26,8 @@ from .const import (
     DEFAULT_HORIZON_HOURS,
     DEFAULT_ADDED_COSTS,
     DEFAULT_RETURN_COSTS,
+    DEFAULT_COMMODITY,
+    DEFAULT_UNIT_OF_MEASUREMENT,
 )
 
 class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,6 +49,8 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HORIZON_HOURS, default=DEFAULT_HORIZON_HOURS): int,
                 vol.Optional(CONF_ADDED_COSTS, default=DEFAULT_ADDED_COSTS): float, # type: ignore
                 vol.Optional(CONF_RETURN_COSTS, default=DEFAULT_RETURN_COSTS): float, # type: ignore
+                vol.Optional(CONF_COMMODITY, default=DEFAULT_COMMODITY): vol.In(["electricity", "gas", "redelivery"]), # type: ignore
+                vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT_OF_MEASUREMENT): vol.In(["€/kWh", "€/m³"]), # type: ignore
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All( # type: ignore
                     int, vol.Range(min=60, max=86400)
                 ),

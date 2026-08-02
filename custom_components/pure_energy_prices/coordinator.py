@@ -25,6 +25,7 @@ from .const import (
     CONF_HORIZON_HOURS,  # int: 24 or 48
     CONF_ADDED_COSTS,
     CONF_RETURN_COSTS,
+    CONF_COMMODITY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
             f"?double_meter={'true' if p.get(CONF_DOUBLE_METER, True) else 'false'}"
             f"&solar_panels={'true' if p.get(CONF_SOLAR_PANELS, True) else 'false'}"
             f"&commodity=electricity"
-            f"&current={current_param}"
+            f"&current={p.get(CONF_COMMODITY)}"
             f"&business={'true' if p.get(CONF_BUSINESS, False) else 'false'}"
             f"&element_id={p.get(CONF_ELEMENT_ID)}"
         )

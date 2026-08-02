@@ -16,6 +16,10 @@ from custom_components.pure_energy_prices.coordinator import PureEnergyCoordinat
 
 _LOGGER = logging.getLogger(__name__)
 
+from .const import (
+    CONF_UNIT_OF_MEASUREMENT,
+)
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -36,7 +40,6 @@ async def async_setup_entry(
     async_add_entities(sensors)
 class PureEnergyPriceSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
     _attr_name = "Pure Energie Price"
-    _attr_unit_of_measurement = "€/kWh"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_value = None
     _attr_has_entity_name = True
@@ -49,6 +52,7 @@ class PureEnergyPriceSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEnti
         super().__init__(coordinator)
         self._entry = entry
         self._attr_unique_id = f"pure_energie_prices_{entry.entry_id}"
+        self._attr_unit_of_measurement = entry.data.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
     def native_value(self) -> float | None:
