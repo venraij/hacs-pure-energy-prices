@@ -36,7 +36,6 @@ async def async_setup_entry(
     async_add_entities(sensors)
 class PureEnergyPriceSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity):
     _attr_name = "Pure Energie Price"
-    _attr_unique_id = "pure_energie_price" 
     _attr_unit_of_measurement = "€/kWh"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_value = None
@@ -49,6 +48,7 @@ class PureEnergyPriceSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEnti
     ) -> None:
         super().__init__(coordinator)
         self._entry = entry
+        self._attr_unique_id = f"pure_energie_prices_{entry.entry_id}"
 
     @property
     def native_value(self) -> float | None:
