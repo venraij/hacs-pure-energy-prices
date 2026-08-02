@@ -37,6 +37,15 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         if user_input is not None:
+            # Convert comma-separated string to list of floats
+            if isinstance(user_input.get(CONF_PERCENTILES), str):
+                try:
+                    user_input[CONF_PERCENTILES] = [
+                        float(p.strip()) for p in user_input[CONF_PERCENTILES].split(",")
+                    ]
+                except ValueError:
+                    return self.async_abort()
+
             return self.async_create_entry(
                 title="Pure Energie Prices",
                 data=user_input,
@@ -56,9 +65,7 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All( # type: ignore
                     int, vol.Range(min=60, max=86400)
                 ),
-                vol.Optional(CONF_PERCENTILES, default=DEFAULT_PERCENTILES): [
-                    vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0))
-                ],
+                vol.Optional(CONF_PERCENTILES, default=DEFAULT_PERCENTILES): str,
             }
         )
 
