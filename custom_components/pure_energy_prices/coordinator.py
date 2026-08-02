@@ -71,6 +71,8 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
         )
 
         async with aiohttp.ClientSession() as session:
+            _LOGGER.info("Calling with call: %s", url)
+
             async with session.get(url) as resp:
                 resp.raise_for_status()
 
