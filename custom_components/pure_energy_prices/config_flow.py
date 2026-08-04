@@ -43,19 +43,21 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         percentiles_val = data.get(CONF_PERCENTILES, DEFAULT_PERCENTILES)
         if isinstance(percentiles_val, list):
             percentiles_val = ", ".join(map(str, percentiles_val))
+        elif percentiles_val is None:
+            percentiles_val = DEFAULT_PERCENTILES
 
         return vol.Schema(
             {
-                vol.Required(CONF_ELEMENT_ID, default=data.get(CONF_ELEMENT_ID, DEFAULT_ELEMENT_ID)): int, # type: ignore
-                vol.Required(CONF_DOUBLE_METER, default=data.get(CONF_DOUBLE_METER, DEFAULT_DOUBLE_METER)): bool, # type: ignore
-                vol.Required(CONF_SOLAR_PANELS, default=data.get(CONF_SOLAR_PANELS, DEFAULT_SOLAR_PANELS)): bool, # type: ignore
-                vol.Required(CONF_BUSINESS, default=data.get(CONF_BUSINESS, DEFAULT_BUSINESS)): bool, # type: ignore
-                vol.Required(CONF_HORIZON_HOURS, default=data.get(CONF_HORIZON_HOURS, DEFAULT_HORIZON_HOURS)): int,
-                vol.Optional(CONF_ADDED_COSTS, default=data.get(CONF_ADDED_COSTS, DEFAULT_ADDED_COSTS)): float, # type: ignore
-                vol.Optional(CONF_RETURN_COSTS, default=data.get(CONF_RETURN_COSTS, DEFAULT_RETURN_COSTS)): float, # type: ignore
-                vol.Optional(CONF_COMMODITY, default=data.get(CONF_COMMODITY, DEFAULT_COMMODITY)): vol.In(["electricity", "gas", "redelivery"]), # type: ignore
-                vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=data.get(CONF_UNIT_OF_MEASUREMENT, DEFAULT_UNIT_OF_MEASUREMENT)): vol.In(["€/kWh", "€/m³"]), # type: ignore
-                vol.Optional(CONF_SCAN_INTERVAL, default=data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)): vol.All( # type: ignore
+                vol.Required(CONF_ELEMENT_ID, default=int(data.get(CONF_ELEMENT_ID, DEFAULT_ELEMENT_ID))): int,
+                vol.Required(CONF_DOUBLE_METER, default=bool(data.get(CONF_DOUBLE_METER, DEFAULT_DOUBLE_METER))): bool,
+                vol.Required(CONF_SOLAR_PANELS, default=bool(data.get(CONF_SOLAR_PANELS, DEFAULT_SOLAR_PANELS))): bool,
+                vol.Required(CONF_BUSINESS, default=bool(data.get(CONF_BUSINESS, DEFAULT_BUSINESS))): bool,
+                vol.Required(CONF_HORIZON_HOURS, default=int(data.get(CONF_HORIZON_HOURS, DEFAULT_HORIZON_HOURS))): int,
+                vol.Optional(CONF_ADDED_COSTS, default=float(data.get(CONF_ADDED_COSTS, DEFAULT_ADDED_COSTS))): float,
+                vol.Optional(CONF_RETURN_COSTS, default=float(data.get(CONF_RETURN_COSTS, DEFAULT_RETURN_COSTS))): float,
+                vol.Optional(CONF_COMMODITY, default=data.get(CONF_COMMODITY, DEFAULT_COMMODITY)): vol.In(["electricity", "gas", "redelivery"]),
+                vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=data.get(CONF_UNIT_OF_MEASUREMENT, DEFAULT_UNIT_OF_MEASUREMENT)): vol.In(["€/kWh", "€/m³"]),
+                vol.Optional(CONF_SCAN_INTERVAL, default=int(data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))): vol.All(
                     int, vol.Range(min=60, max=86400)
                 ),
                 vol.Optional(CONF_PERCENTILES, default=percentiles_val): str,
