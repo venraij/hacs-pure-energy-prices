@@ -38,12 +38,14 @@ async def async_setup_entry(
         PureEnergyPriceSensor(coordinator, config_entry),
     ]
 
-    for percentile in config_entry.data.get(CONF_PERCENTILES, []):
-        sensors.append(
-            PureEnergyPercentileSensor(
-                coordinator, config_entry, percentile, f"{int(percentile * 100)}% price low"
+    percentiles = config_entry.data.get(CONF_PERCENTILES)
+    if isinstance(percentiles, list):
+        for percentile in percentiles:
+            sensors.append(
+                PureEnergyPercentileSensor(
+                    coordinator, config_entry, percentile, f"{int(percentile * 100)}% price low"
+                )
             )
-        )
 
     # Create the sensors.
     async_add_entities(sensors)
