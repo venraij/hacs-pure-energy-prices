@@ -28,7 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) 
     
     return True
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> bool:
+    """Unload a config entry."""
+    hass.data[DOMAIN].pop(entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, ["sensor"])
 
 async def async_remove_config_entry_device(
@@ -40,7 +42,7 @@ async def async_remove_config_entry_device(
     # You may need to do some checks here before allowing devices to be removed.
     return True
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> None:
     """Handle config options update."""
     # Reload the integration when the options change.
     await hass.config_entries.async_reload(entry.entry_id)

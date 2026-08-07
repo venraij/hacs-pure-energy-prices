@@ -49,6 +49,7 @@ async def async_setup_entry(
 
     # Create the sensors.
     async_add_entities(sensors)
+    return True
 class PureEnergyPriceSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity): # type: ignore
     _attr_name = "Pure Energie Price"
     _attr_state_class = SensorStateClass.MEASUREMENT

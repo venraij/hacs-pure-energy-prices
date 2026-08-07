@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "config_flow": true,
-  "codeowners": ["@VenRaij"]
-
+  "codeowners": ["@VenRaij"],
+  "requirements": ["aiohttp>=3.8.0"]
 }
