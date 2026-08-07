@@ -67,8 +67,9 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 processed[CONF_PERCENTILES] = [
                     float(p.strip()) for p in processed[CONF_PERCENTILES].split(",")
                 ]
-            except ValueError:
-                return None
+            except ValueError as e:
+                from voluptuous import Invalid
+                raise Invalid(f"De waarden voor PERCENTILES moeten geldige numerieke waarden zijn: {e}")
         return processed
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:

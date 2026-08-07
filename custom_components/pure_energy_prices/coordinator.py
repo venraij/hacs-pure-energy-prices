@@ -35,15 +35,18 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# Type alias for config entry data — used by __init__.py
+PureEnergieConfigEntry = ConfigEntry[dict[str, Any]]
+
+
 @dataclass
 class PureEnergyData:
     """Class to hold your data."""
     prices: list[dict[str, Any]]
 
-PureEnergieConfigEntry = ConfigEntry[PureEnergyData]
 
 class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
-    def __init__(self, hass: HomeAssistant, entry: PureEnergieConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self.entry = entry
         super().__init__(
             hass,
@@ -75,39 +78,39 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
         session = async_get_clientsession(self.hass)
         _LOGGER.info("Calling with call: %s", url)
 
-        async with await session.get(url) as resp:
-            resp.raise_for_status()
-            
-            content_type = (
-                resp.content_type.split(";")[0].strip().lower()
-                if hasattr(resp, "content_type")
-                else "unknown"
+        resp = await session.get(url)
+        resp.raise_for_status()
+
+        content_type = (
+            resp.content_type.split(";")[0].strip().lower()
+            if hasattr(resp, "content_type")
+            else "unknown"
+        )
+        _LOGGER.debug("Pure Energie API Content-Type: %s", content_type)
+
+        raw_json = await resp.read()
+
+        try:
+            text_content = raw_json.decode("utf-8", errors="replace")
+            if not text_content.strip():
+                raise UpdateFailed("Empty response")
+
+            payload = json.loads(text_content.strip())
+
+        except Exception as e:
+            _LOGGER.warning(
+                "JSON parse failed, checking if wrapped in HTML... (error=%s)", e
             )
-            _LOGGER.debug("Pure Energie API Content-Type: %s", content_type)
 
-            raw_json = await resp.read()
-
-            try:
-                text_content = raw_json.decode("utf-8", errors="replace")
-                if not text_content.strip():
-                    raise UpdateFailed("Empty response")
-
-                payload = json.loads(text_content.strip())
-
-            except Exception as e:
-                _LOGGER.warning(
-                    "JSON parse failed, checking if wrapped in HTML... (error=%s)", e
-                )
-
-                text_content = raw_json.decode("utf-8", errors="replace")
-                html_start = text_content.find("{")
-                if html_start >= 0:
-                    payload = json.loads(text_content[html_start:].strip())
-                else:
-                    raise UpdateFailed(
-                        f"Response appears to be {content_type} HTML wrapper "
-                        f"(first bytes show no valid JSON): {text_content[:100]}"
-                    ) from e
+            text_content = raw_json.decode("utf-8", errors="replace")
+            html_start = text_content.find("{")
+            if html_start >= 0:
+                payload = json.loads(text_content[html_start:].strip())
+            else:
+                raise UpdateFailed(
+                    f"Response appears to be {content_type} HTML wrapper "
+                    f"(first bytes show no valid JSON): {text_content[:100]}"
+                ) from e
 
         prices = payload.get("prices") or []
         if not isinstance(prices, list):
@@ -131,11 +134,14 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
 
             added_costs: float = float(self.entry.data.get(CONF_ADDED_COSTS, 0.0))
             return_costs: float = float(self.entry.data.get(CONF_RETURN_COSTS, 0.0))
-            
-            # Apply added/return costs to all price records
+
+            # Apply costs to all price records (added or return, not both)
             for record in prices:
-                record["price"] = record.get("price", 0.0) + added_costs + return_costs
-            
+                if added_costs > 0 and return_costs == 0:
+                    record["price"] = record.get("price", 0.0) + added_costs
+                elif return_costs > 0 and added_costs == 0:
+                    record["price"] = record.get("price", 0.0) - return_costs
+
             return PureEnergyData(prices)
 
         except UpdateFailed as e:

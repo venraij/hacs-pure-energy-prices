@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) 
         raise ConfigEntryNotReady("No prices data available from Pure Energie API")
 
     entry.async_on_unload(
-        entry.add_update_listener(_async_update_listener)
+        entry.add_update_listener(lambda e: _async_options_updated(hass, e))
     )
     
     # Load the sensor platform for this entry    
@@ -42,7 +42,7 @@ async def async_remove_config_entry_device(
     # You may need to do some checks here before allowing devices to be removed.
     return True
 
-async def _async_update_listener(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> None:
+async def _async_options_updated(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> None:
     """Handle config options update."""
     # Reload the integration when the options change.
     await hass.config_entries.async_reload(entry.entry_id)
