@@ -38,15 +38,18 @@ async def async_setup_entry(
         PureEnergyPriceSensor(coordinator, config_entry),
     ]
 
-    for percentile in config_entry.data.get(CONF_PERCENTILES, []):
-        sensors.append(
-            PureEnergyPercentileSensor(
-                coordinator, config_entry, percentile, f"{int(percentile * 100)}% price low"
+    percentiles = config_entry.data.get(CONF_PERCENTILES)
+    if isinstance(percentiles, list):
+        for percentile in percentiles:
+            sensors.append(
+                PureEnergyPercentileSensor(
+                    coordinator, config_entry, percentile, f"{int(percentile * 100)}% price low"
+                )
             )
-        )
 
     # Create the sensors.
     async_add_entities(sensors)
+    return True
 class PureEnergyPriceSensor(CoordinatorEntity[PureEnergyCoordinator], SensorEntity): # type: ignore
     _attr_name = "Pure Energie Price"
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -142,18 +145,20 @@ class PureEnergyPercentileSensor(CoordinatorEntity[PureEnergyCoordinator], Senso
 
         try:
             sorted_prices = sorted(day_prices)
-            idx = (self._percentile / 100) * (len(sorted_prices) - 1)
             
-            low = math.floor(idx)
-            high = math.ceil(idx)
-            if low == high:
-                return sorted_prices[int(idx)]
+            # Calculate the number of lowest prices to average (P% of N)
+            # We use ceil to ensure we include at least the required percentage.
+            target_count = math.ceil((self._percentile / 100) * len(sorted_prices))
             
-            interpolation = idx - low
-            return sorted_prices[low] * (1 - interpolation) + sorted_prices[high] * interpolation
+            if target_count == 0:
+                return None
+            
+            # Average the cheapest 'target_count' prices
+            average_low = sum(sorted_prices[:target_count]) / target_count
+            return average_low
 
         except Exception as e:
-            _LOGGER.error("Error calculating percentile for %s: %s", self._attr_name, e)
+            _LOGGER.error("Error calculating average low for %s: %s", self._attr_name, e)
             return None
 
     @property

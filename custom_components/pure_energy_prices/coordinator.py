@@ -1,14 +1,16 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import aiohttp
 import json
 import logging
 import urllib.parse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -17,31 +19,31 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     BASE_URL,
-    CONF_ELEMENT_ID,
-    CONF_DOUBLE_METER,
-    CONF_SOLAR_PANELS,
-    CONF_BUSINESS,
-    CONF_SCAN_INTERVAL,
-    CONF_HORIZON_HOURS,  # int: 24 or 48
     CONF_ADDED_COSTS,
-    CONF_RETURN_COSTS,
+    CONF_BUSINESS,
     CONF_COMMODITY,
+    CONF_DOUBLE_METER,
+    CONF_ELEMENT_ID,
+    CONF_HORIZON_HOURS,
+    CONF_RETURN_COSTS,
+    CONF_SCAN_INTERVAL,
+    CONF_SOLAR_PANELS,
 )
 
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
-
-type PureEnergieConfigEntry = ConfigEntry[PureEnergyData]
-
 
 @dataclass
 class PureEnergyData:
     """Class to hold your data."""
-
     prices: list[dict[str, Any]]
 
+PureEnergieConfigEntry = ConfigEntry[PureEnergyData]
 
 class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: PureEnergieConfigEntry) -> None:
         self.entry = entry
         super().__init__(
             hass,
@@ -70,46 +72,42 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
             f"&element_id={p.get(CONF_ELEMENT_ID)}"
         )
 
-        async with aiohttp.ClientSession() as session:
-            _LOGGER.info("Calling with call: %s", url)
+        session = async_get_clientsession(self.hass)
+        _LOGGER.info("Calling with call: %s", url)
 
-            async with session.get(url) as resp:
-                resp.raise_for_status()
+        async with await session.get(url) as resp:
+            resp.raise_for_status()
+            
+            content_type = (
+                resp.content_type.split(";")[0].strip().lower()
+                if hasattr(resp, "content_type")
+                else "unknown"
+            )
+            _LOGGER.debug("Pure Energie API Content-Type: %s", content_type)
 
-                if not resp.ok:
-                    text = await resp.text()
-                    raise UpdateFailed(f"HTTP error {resp.status}: {text[:500]}")
+            raw_json = await resp.read()
 
-                content_type = (
-                    resp.content_type.split(";")[0].strip().lower()
-                    if hasattr(resp, "content_type")
-                    else "unknown"
+            try:
+                text_content = raw_json.decode("utf-8", errors="replace")
+                if not text_content.strip():
+                    raise UpdateFailed("Empty response")
+
+                payload = json.loads(text_content.strip())
+
+            except Exception as e:
+                _LOGGER.warning(
+                    "JSON parse failed, checking if wrapped in HTML... (error=%s)", e
                 )
-                _LOGGER.debug("Pure Energie API Content-Type: %s", content_type)
 
-                raw_json = await resp.read()
-
-                try:
-                    text_content = raw_json.decode("utf-8", errors="replace")
-                    if not text_content.strip():
-                        raise UpdateFailed("Empty response")
-
-                    payload = json.loads(text_content.strip())
-
-                except Exception as e:
-                    _LOGGER.warning(
-                        "JSON parse failed, checking if wrapped in HTML... (error=%s)", e
-                    )
-
-                    text_content = raw_json.decode("utf-8", errors="replace")
-                    html_start = text_content.find("{")
-                    if html_start >= 0:
-                        payload = json.loads(text_content[html_start:].strip())
-                    else:
-                        raise UpdateFailed(
-                            f"Response appears to be {content_type} HTML wrapper "
-                            f"(first bytes show no valid JSON): {text_content[:100]}"
-                        ) from e
+                text_content = raw_json.decode("utf-8", errors="replace")
+                html_start = text_content.find("{")
+                if html_start >= 0:
+                    payload = json.loads(text_content[html_start:].strip())
+                else:
+                    raise UpdateFailed(
+                        f"Response appears to be {content_type} HTML wrapper "
+                        f"(first bytes show no valid JSON): {text_content[:100]}"
+                    ) from e
 
         prices = payload.get("prices") or []
         if not isinstance(prices, list):
@@ -119,10 +117,11 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
         return prices
 
     async def _async_update_data(self) -> PureEnergyData:
-        horizon_hours: int = int(self.entry.data.get(CONF_HORIZON_HOURS, 24))  # 24 or 48
-        now_dt = dt_util.now()
-
+        """Fetches prices and updates the coordinator's data. Implements resilience against API failures."""
         try:
+            horizon_hours: int = int(self.entry.data.get(CONF_HORIZON_HOURS, 24))  # 24 or 48
+            now_dt = dt_util.now()
+
             prices: list[dict[str, Any]] = await self._fetch_prices(now_dt)
 
             if horizon_hours == 48:
@@ -132,11 +131,19 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergyData]):
 
             added_costs: float = float(self.entry.data.get(CONF_ADDED_COSTS, 0.0))
             return_costs: float = float(self.entry.data.get(CONF_RETURN_COSTS, 0.0))
-            if added_costs:
-                for record in prices:
-                    record["price"] = record.get("price", 0.0) + added_costs + return_costs
+            
+            # Apply added/return costs to all price records
+            for record in prices:
+                record["price"] = record.get("price", 0.0) + added_costs + return_costs
+            
+            return PureEnergyData(prices)
 
+        except UpdateFailed as e:
+            # Catch API failures and prevent them from causing a fatal ConfigEntryNotReady during setup
+            _LOGGER.warning("Failed to fetch Pure Energie prices: %s. The integration will continue with stale/empty data until next successful fetch.", e)
+            # Return the current data (which might be empty) to allow setup to complete
+            return self.data
         except Exception as e:
-            raise UpdateFailed(f"Failed to fetch Pure Energie prices: {e}") from e
-
-        return PureEnergyData(prices)
+            _LOGGER.error("An unexpected error occurred during price fetching: %s", e)
+            # Also return current data on unexpected failure
+            return self.data
