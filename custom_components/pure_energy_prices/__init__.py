@@ -20,7 +20,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) 
         raise ConfigEntryNotReady("No prices data available from Pure Energie API")
 
     entry.async_on_unload(
-        entry.add_update_listener(lambda e: _async_options_updated(hass, e))
+        entry.add_update_listener(
+            lambda config_entry, options: _async_options_updated(hass, config_entry)
+        ),
     )
     
     # Load the sensor platform for this entry    
