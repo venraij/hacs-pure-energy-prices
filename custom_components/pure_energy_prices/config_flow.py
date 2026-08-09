@@ -3,6 +3,7 @@ from __future__ import annotations
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.helpers.config_validation import boolean, positive_int, small_float, string
 
 from .const import (
     CONF_ADDED_COSTS,
@@ -44,19 +45,19 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             p_str = str(p_val) if p_val is not None else DEFAULT_PERCENTILES
 
         return vol.Schema({
-            vol.Required(CONF_ELEMENT_ID, default=DEFAULT_ELEMENT_ID): vol.Number(),
-            vol.Required(CONF_DOUBLE_METER, default=DEFAULT_DOUBLE_METER): vol.Boolean,
-            vol.Required(CONF_SOLAR_PANELS, default=DEFAULT_SOLAR_PANELS): vol.Boolean,
-            vol.Required(CONF_BUSINESS, default=DEFAULT_BUSINESS): vol.Boolean,
-            vol.Required(CONF_HORIZON_HOURS, default=DEFAULT_HORIZON_HOURS): vol.Number(),
-            vol.Optional(CONF_ADDED_COSTS, default=DEFAULT_ADDED_COSTS): vol.Decimal(),
-            vol.Optional(CONF_RETURN_COSTS, default=DEFAULT_RETURN_COSTS): vol.Decimal(),
+            vol.Required(CONF_ELEMENT_ID, default=DEFAULT_ELEMENT_ID): positive_int,
+            vol.Required(CONF_DOUBLE_METER, default=DEFAULT_DOUBLE_METER): boolean,
+            vol.Required(CONF_SOLAR_PANELS, default=DEFAULT_SOLAR_PANELS): boolean,
+            vol.Required(CONF_BUSINESS, default=DEFAULT_BUSINESS): boolean,
+            vol.Required(CONF_HORIZON_HOURS, default=DEFAULT_HORIZON_HOURS): positive_int,
+            vol.Optional(CONF_ADDED_COSTS, default=DEFAULT_ADDED_COSTS): small_float,
+            vol.Optional(CONF_RETURN_COSTS, default=DEFAULT_RETURN_COSTS): small_float,
             vol.Optional(CONF_COMMODITY, default=DEFAULT_COMMODITY): vol.In(["electricity", "gas", "redelivery"]),
             vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT_OF_MEASUREMENT): vol.In(["€/kWh", "€/m³"]),
             vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
                 vol.Number(), vol.Range(min=60, max=86400)
             ),
-            vol.Optional(CONF_PERCENTILES, default=p_str): str,
+            vol.Optional(CONF_PERCENTILES, default=p_str): string,
         })
 
     def _process_input(self, user_input: dict) -> dict | None:
