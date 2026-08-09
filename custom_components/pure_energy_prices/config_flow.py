@@ -55,7 +55,7 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_COMMODITY, default=DEFAULT_COMMODITY): vol.In(["electricity", "gas", "redelivery"]),
             vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT_OF_MEASUREMENT): vol.In(["€/kWh", "€/m³"]),
             vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-                vol.Number(), vol.Range(min=60, max=86400)
+                positive_int, vol.Range(min=60, max=86400)
             ),
             vol.Optional(CONF_PERCENTILES, default=p_str): string,
         })
