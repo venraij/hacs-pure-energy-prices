@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -60,7 +63,7 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_PERCENTILES, default=p_str): string,
         })
 
-    def _process_input(self, user_input: dict) -> dict | None:
+    def _process_input(self, user_input: dict) -> Mapping[str, Any]:
         """Convert string percentiles to a list of floats."""
         processed = user_input.copy()
         if isinstance(processed.get(CONF_PERCENTILES), str):
@@ -73,20 +76,28 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise Invalid(f"De waarden voor PERCENTILES moeten geldige numerieke waarden zijn: {e}")
         return processed
 
-    async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
-        # Use the built-in HA validation to capture all errors
+    async def async_step_user(
+        self, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        if user_input is not None:
+            processed = self._process_input(user_input)
+            return self.async_create_entry(title="", data=processed)
+
         return self.async_show_form(
             step_id="user",
             data_schema=self._get_schema({}),
-            errors={}
+            errors={},
         )
 
     async def async_step_reconfigure(
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
-        # Use the built-in HA validation to capture all errors
+        if user_input is not None:
+            processed = self._process_input(user_input)
+            return self.async_create_entry(title="", data=processed)
+
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self._get_schema(dict(self._get_reconfigure_entry().data)),
-            errors={}
+            errors={},
         )
