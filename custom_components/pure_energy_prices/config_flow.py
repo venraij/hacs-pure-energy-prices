@@ -81,7 +81,7 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         if user_input is not None:
             processed = self._process_input(user_input)
-            return self.async_create_entry(title="", data=processed)
+            return self.async_create_entry(title="Pure Energie Prices", data=processed)
 
         return self.async_show_form(
             step_id="user",
@@ -94,7 +94,7 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         if user_input is not None:
             processed = self._process_input(user_input)
-            return self.async_create_entry(title="", data=processed)
+            return self.async_create_entry(title="Pure Energie Prices", data=processed)
 
         return self.async_show_form(
             step_id="reconfigure",
