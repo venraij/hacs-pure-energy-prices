@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) 
 
     entry.async_on_unload(
         entry.add_update_listener(
-            lambda config_entry, options: _async_options_updated(hass, config_entry)
+            lambda hass, config_entry: _async_options_updated(hass, config_entry)
         ),
     )
     
