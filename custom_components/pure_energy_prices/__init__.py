@@ -1,14 +1,22 @@
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    DeviceEntryType,
+    async_get as async_get_device_registry,
+)
 from custom_components.pure_energy_prices.const import DOMAIN
-from custom_components.pure_energy_prices.coordinator import PureEnergieConfigEntry
-from custom_components.pure_energy_prices.sensor import PureEnergyCoordinator
+from custom_components.pure_energy_prices.coordinator import PureEnergyCoordinator, PureEnergieConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> bool:
+    """Set up Pure Energie Prices from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     coordinator = PureEnergyCoordinator(hass, entry)
@@ -19,17 +27,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) 
     if not coordinator.data.prices:
         raise ConfigEntryNotReady("No prices data available from Pure Energie API")
 
-    entry.async_on_unload(
-        entry.add_update_listener(_async_update_listener)
+    # Register the device in the device registry
+    device_registry = async_get_device_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name="Pure Energie Prices",
+        manufacturer="Pure Energie",
+        model="Dynamic Pricing",
+        entry_type=DeviceEntryType.SERVICE,
     )
-    
-    # Load the sensor platform for this entry    
+
+    entry.async_on_unload(
+        entry.add_update_listener(
+            lambda hass, config_entry: _async_options_updated(hass, config_entry)
+        ),
+    )
+
+    # Load the sensor platform for this entry
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
-    
+
     return True
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_unload_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> bool:
+    """Unload a config entry."""
+    hass.data[DOMAIN].pop(entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, ["sensor"])
+
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
@@ -37,10 +62,11 @@ async def async_remove_config_entry_device(
     """Delete device if selected from UI."""
     # Adding this function shows the delete device option in the UI.
     # Remove this function if you do not want that option.
-    # You may need to do some checks here before allowing devices to be removed.
+    # You may need to do some checks before allowing devices to be removed.
     return True
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+
+async def _async_options_updated(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> None:
     """Handle config options update."""
     # Reload the integration when the options change.
     await hass.config_entries.async_reload(entry.entry_id)

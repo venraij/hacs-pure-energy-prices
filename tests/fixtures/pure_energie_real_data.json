@@ -1,0 +1,396 @@
+{
+  "label": "Vandaag",
+  "filters": {
+    "period": "hours",
+    "previous": "2026-09-15 00:00",
+    "next": "2026-09-17 00:00",
+    "commodity": "electricity",
+    "type": "all_inclusive"
+  },
+  "prices": [
+    {
+      "price": 0.3247882,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "00:00 tot 01:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "00:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 00:00"
+      }
+    },
+    {
+      "price": 0.3181332,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "01:00 tot 02:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "01:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 01:00"
+      }
+    },
+    {
+      "price": 0.3151808,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "02:00 tot 03:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "02:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 02:00"
+      }
+    },
+    {
+      "price": 0.3149025,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "03:00 tot 04:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "03:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 03:00"
+      }
+    },
+    {
+      "price": 0.3158463,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "04:00 tot 05:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "04:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 04:00"
+      }
+    },
+    {
+      "price": 0.3397196,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "05:00 tot 06:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "05:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 05:00"
+      }
+    },
+    {
+      "price": 0.3754993,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "06:00 tot 07:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "06:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 06:00"
+      }
+    },
+    {
+      "price": 0.396154,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "07:00 tot 08:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "07:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 07:00"
+      }
+    },
+    {
+      "price": 0.383086,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "08:00 tot 09:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "08:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 08:00"
+      }
+    },
+    {
+      "price": 0.34606,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "09:00 tot 10:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "09:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 09:00"
+      }
+    },
+    {
+      "price": 0.331177,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "10:00 tot 11:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "10:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 10:00"
+      }
+    },
+    {
+      "price": 0.2879558,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "11:00 tot 12:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "11:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 11:00"
+      }
+    },
+    {
+      "price": 0.2518252,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "12:00 tot 13:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "12:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 12:00"
+      }
+    },
+    {
+      "price": 0.2286779,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "13:00 tot 14:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "13:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 13:00"
+      }
+    },
+    {
+      "price": 0.235345,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "14:00 tot 15:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "14:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 14:00"
+      }
+    },
+    {
+      "price": 0.2554552,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "15:00 tot 16:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "15:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 15:00"
+      }
+    },
+    {
+      "price": 0.2966194,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "16:00 tot 17:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "16:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 16:00"
+      }
+    },
+    {
+      "price": 0.3530538,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "17:00 tot 18:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "17:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 17:00"
+      }
+    },
+    {
+      "price": 0.3904549,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "18:00 tot 19:00 16 september 2026",
+        "current": true,
+        "is_past": true,
+        "hour": "18:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 18:00"
+      }
+    },
+    {
+      "price": 0.4191924,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "19:00 tot 20:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "19:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 19:00"
+      }
+    },
+    {
+      "price": 0.4099238,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "20:00 tot 21:00 16 september 2026",
+        "current": false,
+        "is_past": true,
+        "hour": "20:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 20:00"
+      }
+    },
+    {
+      "price": 0.3774837,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "21:00 tot 22:00 16 september 2026",
+        "current": false,
+        "is_past": false,
+        "hour": "21:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 21:00"
+      }
+    },
+    {
+      "price": 0.355619,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "22:00 tot 23:00 16 september 2026",
+        "current": false,
+        "is_past": false,
+        "hour": "22:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 22:00"
+      }
+    },
+    {
+      "price": 0.3359323,
+      "unity": "kWh",
+      "label": null,
+      "date": {
+        "label": "23:00 tot 00:00 16 september 2026",
+        "current": false,
+        "is_past": false,
+        "hour": "23:00",
+        "day_name": "Wo",
+        "day_number": 16,
+        "month": "sep.",
+        "year": "2026",
+        "full": "2026-09-16 23:00"
+      }
+    }
+  ]
+}
