@@ -123,13 +123,7 @@ async def async_setup_entry(
     async_add_entities,
 ) -> None:
     """Set up the Sensors."""
-    coordinator = PureEnergyCoordinator(hass=hass, entry=config_entry)
-
-    await coordinator.async_config_entry_first_refresh()
-
-    if not hasattr(coordinator, 'data') or not coordinator.data:
-        _LOGGER.error("No data available for sensors")
-        return
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Create device_info for sensors
     device_info = DeviceInfo(
@@ -142,18 +136,17 @@ async def async_setup_entry(
     # Create the main price sensor
     sensors: list[SensorEntity] = [PureEnergyPriceSensor(coordinator, config_entry, device_info)]
 
-    # Add percentile sensors based on configuration
-    percentiles_str = config_entry.data.get('percentiles', '0.05, 0.1, 0.2, 0.4')
+    # Parse percentiles from config entry — supports both str and list
+    percentiles_raw = config_entry.data.get("percentiles", "0.05,0.1,0.2,0.4")
 
-    if isinstance(percentiles_str, str):
-        percentiles = [float(p.strip()) for p in percentiles_str.split(',')]
-    elif isinstance(percentiles_str, list):
-        percentiles = [float(p) for p in percentiles_str]
+    if isinstance(percentiles_raw, str):
+        percentiles = [float(p.strip()) for p in percentiles_raw.split(",")]
+    elif isinstance(percentiles_raw, list):
+        percentiles = [float(p) for p in percentiles_raw]
     else:
-        # Default to standard percentiles if parsing fails
-        default_percentiles = ['0.05', '0.1', '0.2', '0.4']
-        percentiles = [float(p.strip()) for p in default_percentiles]
+        percentiles = [0.05, 0.1, 0.2, 0.4]
 
+    # Create one sensor per percentile
     for percentile in percentiles:
         sensors.append(
             PureEnergyPercentileSensor(coordinator, config_entry, percentile, device_info)

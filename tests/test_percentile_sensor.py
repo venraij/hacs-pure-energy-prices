@@ -1,73 +1,82 @@
-"""Tests for the pure_energy_percentile_sensor module."""
+"""Tests for the PureEnergyPercentileSensor class."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
-from custom_components.pure_energy_prices.pure_energy_percentile_sensor import PureEnergyPercentileSensor
+from unittest.mock import MagicMock
+from homeassistant.components.sensor import SensorStateClass
+
+from custom_components.pure_energy_prices.sensor import PureEnergyPercentileSensor
+from homeassistant.helpers.device_registry import DeviceInfo
 
 
-class TestPureEnergyPercentileSensor:
-    """Test cases for the PureEnergyPercentileSensor class."""
+@pytest.fixture
+def mock_entry():
+    """Create a mock config entry."""
+    entry = MagicMock()
+    entry.data = {"unit_of_measurement": "\u20ac/kWh"}
+    entry.entry_id = "test_entry"
+    return entry
 
-    @pytest.fixture
-    def mock_entry(self):
-        """Create a mock config entry."""
-        entry = MagicMock()
-        entry.data = {"unit_of_measurement": "€/kWh"}
-        entry.entry_id = "test_entry"
-        return entry
 
-    @pytest.fixture
-    def mock_coordinator(self):
-        """Create a mock coordinator with sample data."""
-        coord = MagicMock()
-        coord.data.prices = [
-            {"price": 0.10},
-            {"price": 0.15},
-            {"price": 0.20},
-            {"price": 0.25},
-            {"price": 0.30},
-        ]
-        coord.async_update_data = AsyncMock()
-        return coord
+@pytest.fixture
+def mock_coordinator():
+    """Create a mock coordinator with sample data."""
+    coord = MagicMock()
+    coord.data = MagicMock()
+    coord.data.prices = [
+        {"price": 0.10},
+        {"price": 0.15},
+        {"price": 0.20},
+        {"price": 0.25},
+        {"price": 0.30},
+    ]
+    return coord
 
-    @pytest.fixture
-    def percentile_sensor(self, mock_coordinator, mock_entry):
-        """Create a percentile sensor instance."""
-        return PureEnergyPercentileSensor(
-            mock_coordinator, mock_entry, 10.0, "10%"
-        )
 
-    def test_sensor_creation(self, percentile_sensor):
-        """Test sensor creation."""
-        assert percentile_sensor.percentile == 10.0
-        assert percentile_sensor.name == "Pure Energy 10% Percentile (10%)"
+@pytest.fixture
+def device_info():
+    """Create a mock DeviceInfo."""
+    return DeviceInfo(
+        identifiers={("pure_energy_prices", "test_entry")},
+        name="Pure Energie Prices",
+        manufacturer="Pure Energie",
+        model="Dynamic Pricing",
+    )
 
-    def test_unit_of_measurement(self, percentile_sensor, mock_entry):
-        """Test unit of measurement property."""
-        assert percentile_sensor.unit_of_measurement == "€/kWh"
 
-    def test_state_class(self, percentile_sensor):
-        """Test state class property."""
-        from homeassistant.components.sensor import SensorStateClass
-        assert percentile_sensor.state_class == SensorStateClass.MEASUREMENT
+@pytest.fixture
+def percentile_sensor(mock_coordinator, mock_entry, device_info):
+    """Create a percentile sensor instance."""
+    return PureEnergyPercentileSensor(
+        mock_coordinator, mock_entry, 10.0, device_info
+    )
 
-    def test_native_value_with_data(self, percentile_sensor, mock_coordinator):
-        """Test native_value with available data."""
-        # Set up mock data directly on the coordinator's data attribute
-        mock_coordinator.data.prices = [0.10, 0.15, 0.20, 0.25, 0.30]
-        value = percentile_sensor.native_value
-        assert value is not None
-        assert isinstance(value, float)
 
-    def test_native_value_empty_data(self, percentile_sensor):
-        """Test native_value with no data."""
-        percentile_sensor.coordinator.data.prices = []
-        value = percentile_sensor.native_value
-        assert value is None
+def test_sensor_creation(percentile_sensor):
+    """Test sensor creation."""
+    assert percentile_sensor._percentile == 10.0
+    assert "10%" in percentile_sensor.name
 
-    @pytest.mark.asyncio
-    async def test_update(self, percentile_sensor):
-        """Test update method."""
-        await percentile_sensor.update()
-        # Verify that the coordinator's async_update_data was called
-        assert percentile_sensor.coordinator.async_update_data.called
+
+def test_unit_of_measurement(percentile_sensor, mock_entry):
+    """Test unit of measurement property."""
+    assert percentile_sensor.unit_of_measurement == "\u20ac/kWh"
+
+
+def test_state_class(percentile_sensor):
+    """Test state class property."""
+    assert percentile_sensor.state_class == SensorStateClass.MEASUREMENT
+
+
+def test_native_value_with_data(percentile_sensor, mock_coordinator):
+    """Test native_value with available data."""
+    mock_coordinator.data.prices = [0.10, 0.15, 0.20, 0.25, 0.30]
+    value = percentile_sensor.native_value
+    assert value is not None
+    assert isinstance(value, float)
+
+
+def test_native_value_empty_data(percentile_sensor):
+    """Test native_value with no data."""
+    percentile_sensor.coordinator.data.prices = []
+    value = percentile_sensor.native_value
+    assert value is None

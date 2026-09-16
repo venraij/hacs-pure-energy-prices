@@ -30,13 +30,10 @@ from .const import (
     CONF_SOLAR_PANELS,
 )
 
-if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 
-# Type alias for config entry data — used by __init__.py
-PureEnergieConfigEntry = ConfigEntry[dict[str, Any]]
+# Type alias for config entry — used by __init__.py
+PureEnergieConfigEntry = ConfigEntry
 
 
 @dataclass
