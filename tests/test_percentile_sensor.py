@@ -47,17 +47,17 @@ def device_info():
 def percentile_sensor(mock_coordinator, mock_entry, device_info):
     """Create a percentile sensor instance."""
     return PureEnergyPercentileSensor(
-        mock_coordinator, mock_entry, 10.0, device_info
+        mock_coordinator, mock_entry, 0.1, device_info
     )
 
 
 def test_sensor_creation(percentile_sensor):
     """Test sensor creation."""
-    assert percentile_sensor._percentile == 10.0
-    assert "10%" in percentile_sensor.name
+    assert percentile_sensor._percentile == 0.1
+    assert "10th Percentile" in percentile_sensor.name
 
 
-def test_unit_of_measurement(percentile_sensor, mock_entry):
+def test_unit_of_measurement(percentile_sensor, mock_entry, device_info):
     """Test unit of measurement property."""
     assert percentile_sensor.unit_of_measurement == "\u20ac/kWh"
 

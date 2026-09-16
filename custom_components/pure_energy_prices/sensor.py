@@ -70,8 +70,8 @@ class PureEnergyPercentileSensor(SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        p_val = int(self._percentile) if isinstance(self._percentile, float) and self._percentile == int(self._percentile) else self._percentile
-        return f"Pure Energy {p_val}% Percentile ({self._percentile}%)"
+        p_val = round(self._percentile * 100)
+        return f"Pure Energy {p_val}th Percentile ({p_val}%)"
 
     @property
     def native_value(self) -> float | None:
@@ -95,7 +95,7 @@ class PureEnergyPercentileSensor(SensorEntity):
                 return None
 
             # Calculate percentile using linear interpolation
-            k = (len(prices) - 1) * (self._percentile / 100.0)
+            k = (len(prices) - 1) * self._percentile
 
             if k == int(k):
                 return prices[int(k)]
