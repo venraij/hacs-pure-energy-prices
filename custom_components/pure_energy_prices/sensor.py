@@ -49,6 +49,12 @@ class PureEnergyPriceSensor(SensorEntity):
         """Return the state class of the sensor."""
         return SensorStateClass.MEASUREMENT
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        data = self.coordinator.data.prices if hasattr(self.coordinator, "data") and self.coordinator.data else []
+        return {"prices": data}
+
 
 class PureEnergyPercentileSensor(SensorEntity):
     """Sensor entity for displaying a specific percentile price."""
