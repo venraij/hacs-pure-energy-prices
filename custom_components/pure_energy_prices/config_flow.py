@@ -94,10 +94,23 @@ class PureEnergyPricesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         if user_input is not None:
             processed = self._process_input(user_input)
-            return self.async_create_entry(title="Pure Energie Prices", data=processed)
+            existing = self.hass.config_entries.async_entries(self.handler)
+            if existing:
+                entry = existing[0]
+                self.hass.config_entries.async_update_entry(
+                    entry, data=processed
+                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self._get_schema(dict(self._get_reconfigure_entry().data)),
+            data_schema=self._get_schema(
+                dict(
+                    self.hass.config_entries.async_entries(self.handler)[
+                        0
+                    ].data
+                )
+            ),
             errors={},
         )
