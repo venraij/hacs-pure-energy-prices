@@ -61,11 +61,11 @@ class PureEnergyPercentileSensor(SensorEntity):
         device_info: DeviceInfo,
     ) -> None:
         """Initialize the sensor."""
+        self._percentile = percentile
         self.coordinator = coordinator
         self.config_entry = config_entry
         self._attr_device_info = device_info
-        self._attr_unique_id = f"{config_entry.entry_id}_percentile_{int(percentile)}"
-        self._percentile = percentile
+        self._attr_unique_id = f"{config_entry.entry_id}_percentile_{percentile}"
 
     @property
     def name(self) -> str:
