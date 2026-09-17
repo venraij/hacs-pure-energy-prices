@@ -1,10 +1,10 @@
-"""Tests for the PureEnergyPercentileSensor class."""
+"""Tests for the PureEnergiePercentileSensor class."""
 
 import pytest
 from unittest.mock import MagicMock
 from homeassistant.components.sensor import SensorStateClass
 
-from custom_components.pure_energy_prices.sensor import PureEnergyPercentileSensor
+from custom_components.pure_energy_prices.sensor import PureEnergiePercentileSensor
 from homeassistant.helpers.device_registry import DeviceInfo
 
 
@@ -46,7 +46,7 @@ def device_info():
 @pytest.fixture
 def percentile_sensor(mock_coordinator, mock_entry, device_info):
     """Create a percentile sensor instance."""
-    return PureEnergyPercentileSensor(
+    return PureEnergiePercentileSensor(
         mock_coordinator, mock_entry, 0.1, device_info
     )
 

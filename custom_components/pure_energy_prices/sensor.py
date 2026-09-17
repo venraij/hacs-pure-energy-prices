@@ -1,34 +1,57 @@
+"""Sensor entities for the Pure Energie Prices integration."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from custom_components.pure_energy_prices.const import DOMAIN
-from custom_components.pure_energy_prices.coordinator import PureEnergyCoordinator
+from custom_components.pure_energy_prices.const import (
+    CONF_COMMODITY_ELECTRICITY,
+    CONF_COMMODITY_GAS,
+    CONF_SOLAR_PANELS,
+    DEFAULT_PERCENTILES,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class PureEnergyPriceSensor(SensorEntity):
+class PureEnergiePriceSensor(SensorEntity):
     """Sensor entity for displaying pure energy prices."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
-        coordinator: PureEnergyCoordinator,
+        coordinator: DataUpdateCoordinator,
         config_entry: ConfigEntry,
-        device_info: DeviceInfo,
+        commodity: str,
+        direction: str,
+        unit_of_measurement: str,
     ) -> None:
         """Initialize the sensor."""
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, config_entry.entry_id)},
+            "name": f"Pure Energie {commodity.title()}",
+            "manufacturer": "Pure Energie",
+            "model": f"Dynamic Pricing ({commodity} {direction})",
+        }
         self.coordinator = coordinator
         self.config_entry = config_entry
-        self._attr_device_info = device_info
-        self._attr_name = "Pure Energy Price"
-        self._attr_unique_id = f"{config_entry.entry_id}_price"
+        self._commodity = commodity
+        self._direction = direction
+        self._attr_unique_id = (
+            f"{config_entry.entry_id}_{commodity}_{direction}"
+        )
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_suggested_display_precision = 2
 
     @property
     def native_value(self) -> float | None:
@@ -40,87 +63,72 @@ class PureEnergyPriceSensor(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return self.config_entry.data.get("unit_of_measurement", "€/kWh")
-
-    @property
     def state_class(self) -> SensorStateClass:
         """Return the state class of the sensor."""
-        return SensorStateClass.MEASUREMENT
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        data = self.coordinator.data.prices if hasattr(self.coordinator, "data") and self.coordinator.data else []
-        return {"prices": data}
+        return SensorStateClass.TOTAL
 
 
-class PureEnergyPercentileSensor(SensorEntity):
-    """Sensor entity for displaying a specific percentile price."""
+class PureEnergiePercentileSensor(SensorEntity):
+    """Sensor entity for displaying percentile prices."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
-        coordinator: PureEnergyCoordinator,
+        coordinator: DataUpdateCoordinator,
         config_entry: ConfigEntry,
+        commodity: str,
+        direction: str,
+        unit_of_measurement: str,
         percentile: float,
-        device_info: DeviceInfo,
     ) -> None:
         """Initialize the sensor."""
-        self._percentile = percentile
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, config_entry.entry_id)},
+            "name": f"Pure Energie {commodity.title()}",
+            "manufacturer": "Pure Energie",
+            "model": f"Dynamic Pricing ({commodity} {direction})",
+        }
         self.coordinator = coordinator
         self.config_entry = config_entry
-        self._attr_device_info = device_info
-        self._attr_unique_id = f"{config_entry.entry_id}_percentile_{percentile}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        p_val = round(self._percentile * 100)
-        return f"Pure Energy {p_val}th Percentile ({p_val}%)"
+        self._commodity = commodity
+        self._direction = direction
+        self._percentile = percentile
+        self._attr_unique_id = (
+            f"{config_entry.entry_id}_{commodity}_{direction}_percentile_{int(percentile * 100)}"
+        )
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_suggested_display_precision = 2
 
     @property
     def native_value(self) -> float | None:
-        """Return the calculated percentile price."""
-        try:
-            data_container = self.coordinator.data if hasattr(self.coordinator, "data") else {}
-
-            prices = None
-            if hasattr(data_container, 'prices'):
-                prices = data_container.prices
-            elif isinstance(data_container, dict) and 'prices' in data_container:
-                prices = data_container['prices']
-
-            if not prices:
-                return None
-
-            # Extract numeric prices from the list of dicts returned by the API
-            prices = [p.get("price", p) if isinstance(p, dict) else p for p in prices]
-            prices = [p for p in prices if isinstance(p, (int, float))]
-            if not prices:
-                return None
-
-            # Calculate percentile using linear interpolation
-            k = (len(prices) - 1) * self._percentile
-
-            if k == int(k):
-                return prices[int(k)]
-            else:
-                i = int(k)
-                f = k - i
-                return round(prices[i] + f * (prices[i+1] - prices[i]), 2)
-        except (IndexError, TypeError, ValueError):
+        """Return the percentile price."""
+        data = self.coordinator.data.prices if hasattr(self.coordinator, "data") and self.coordinator.data else []
+        if not isinstance(data, list) or len(data) == 0:
             return None
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return self.config_entry.data.get("unit_of_measurement", "€/kWh")
+        prices = [record.get("price", 0.0) for record in data if "price" in record]
+        if not prices:
+            return None
+
+        # Calculate percentile using linear interpolation
+        k = (len(prices) - 1) * self._percentile
+        idx = int(k)
+        fraction = k - idx
+
+        if idx >= len(prices) - 1:
+            return round(prices[-1], 2)
+
+        if fraction == 0:
+            return round(prices[idx], 2)
+
+        return round(prices[idx] + fraction * (prices[idx + 1] - prices[idx]), 2)
 
     @property
     def state_class(self) -> SensorStateClass:
         """Return the state class of the sensor."""
-        return SensorStateClass.MEASUREMENT
+        return SensorStateClass.TOTAL
 
 
 async def async_setup_entry(
@@ -128,22 +136,16 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities,
 ) -> None:
-    """Set up the Sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    """Set up the Pure Energie sensors."""
+    coordinators = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Create device_info for sensors
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, config_entry.entry_id)},
-        name="Pure Energie Prices",
-        manufacturer="Pure Energie",
-        model="Dynamic Pricing",
-    )
+    # Determine which sensors to create
+    has_electricity = config_entry.data.get(CONF_COMMODITY_ELECTRICITY, True)
+    has_solar = config_entry.data.get(CONF_SOLAR_PANELS, False)
+    has_gas = config_entry.data.get(CONF_COMMODITY_GAS, False)
 
-    # Create the main price sensor
-    sensors: list[SensorEntity] = [PureEnergyPriceSensor(coordinator, config_entry, device_info)]
-
-    # Parse percentiles from config entry — supports both str and list
-    percentiles_raw = config_entry.data.get("percentiles", "0.05,0.1,0.2,0.4")
+    # Parse percentiles
+    percentiles_raw = config_entry.data.get("percentiles", DEFAULT_PERCENTILES)
 
     if isinstance(percentiles_raw, str):
         percentiles = [float(p.strip()) for p in percentiles_raw.split(",")]
@@ -152,10 +154,78 @@ async def async_setup_entry(
     else:
         percentiles = [0.05, 0.1, 0.2, 0.4]
 
-    # Create one sensor per percentile
-    for percentile in percentiles:
+    sensors = []
+
+    # Create electricity import sensor (always created if electricity is selected)
+    if has_electricity and "electricity_import" in coordinators:
         sensors.append(
-            PureEnergyPercentileSensor(coordinator, config_entry, percentile, device_info)
+            PureEnergiePriceSensor(
+                coordinators["electricity_import"],
+                config_entry,
+                "electricity",
+                "import",
+                "kWh",
+            )
         )
+        # Add percentile sensors for electricity import
+        for percentile in percentiles:
+            sensors.append(
+                PureEnergiePercentileSensor(
+                    coordinators["electricity_import"],
+                    config_entry,
+                    "electricity",
+                    "import",
+                    "kWh",
+                    percentile,
+                )
+            )
+
+        # Create electricity export sensor if solar panels are configured
+        if has_solar and "electricity_export" in coordinators:
+            sensors.append(
+                PureEnergiePriceSensor(
+                    coordinators["electricity_export"],
+                    config_entry,
+                    "electricity",
+                    "export",
+                    "kWh",
+                )
+            )
+            # Add percentile sensors for electricity export
+            for percentile in percentiles:
+                sensors.append(
+                    PureEnergiePercentileSensor(
+                        coordinators["electricity_export"],
+                        config_entry,
+                        "electricity",
+                        "export",
+                        "kWh",
+                        percentile,
+                    )
+                )
+
+    # Create gas import sensor (only if gas is configured)
+    if has_gas and "gas_import" in coordinators:
+        sensors.append(
+            PureEnergiePriceSensor(
+                coordinators["gas_import"],
+                config_entry,
+                "gas",
+                "import",
+                "m³",
+            )
+        )
+        # Add percentile sensors for gas import
+        for percentile in percentiles:
+            sensors.append(
+                PureEnergiePercentileSensor(
+                    coordinators["gas_import"],
+                    config_entry,
+                    "gas",
+                    "import",
+                    "m³",
+                    percentile,
+                )
+            )
 
     async_add_entities(sensors)
