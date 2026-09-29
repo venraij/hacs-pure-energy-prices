@@ -1,39 +1,62 @@
-# Pure Energie Custom Prices (Custom Component)
+# Pure Energie Prices (Custom Component)
 
-This Home Assistant custom component fetches **Pure Energie dynamic electricity prices** from the public API endpoint and exposes them as Home Assistant sensors.
+This Home Assistant custom component fetches **Pure Energie dynamic electricity and gas prices** from the public API endpoint and exposes them as Home Assistant sensors.
 
 It provides:
-- A sensor that exposes the full hourly `prices` list as an attribute
-- A sensor that exposes the current hour’s all-in price (based on `date.current`)
+- Current price sensors for electricity and gas
+- Percentile sensors to identify cheapest hours
+- `prices` attribute for ApexCharts graphing
+- Direction-based cost adjustments (import/export)
 
 ## Features
-- Polls the Pure Energie API every hour
+
+- Polls the Pure Energie API on a configurable interval
 - Publishes:
-  - `prices` attribute (raw API hourly list)
-  - `current all-in price` sensor
+  - Current price sensors for electricity and gas
+  - Percentile sensors (5th, 10th, 20th, 40th by default)
+  - `prices` attribute (raw API hourly list) on the main price sensor
 
-## Configuration Options and Their Impact
+## Entities
 
-This section explains the purpose and consequence of each configurable option. Misconfiguration here can lead to incorrect data being displayed.
+Each config entry can create:
 
-*   **`element_id` (Required):** The unique identifier for your energy contract. This is essential for the API to fetch data for your specific service.
-*   **`double_meter` (Boolean):** If set to `true`, the API call includes parameters for a double meter setup. If this is incorrect for your contract, the returned prices will be wrong.
-*   **`solar_panels` (Boolean):** If `true`, the API query includes parameters for solar panel integration. If set incorrectly, the prices displayed may not account for your generation.
-*   **`business` (Boolean):** Distinguishes between residential and commercial contracts. Setting this incorrectly will fetch data for the wrong customer type.
-*   **`horizon_hours` (Integer):** Defines how far into the future the prices are calculated (e.g., `24` for one day, `48` for two days).
-*   **`commodity` (Enum):** Selects the type of energy (`electricity`, `gas`, `redelivery`). Ensure this matches your contract exactly.
-*   **`percentiles` (String):** Specifies the percentile values to track (e.g., `"10, 50, 90"`). **This is the most fragile setting; ensure only comma-separated numeric values are used.**
+| Sensor | When | Name |
+|--------|------|------|
+| Current Price | Always (if electricity enabled) | `Pure Energie Electricity - Current Price` |
+| Percentile sensors | Always (if electricity enabled) | `Pure Energie Electricity - Percentile Price (5)` |
+| Current Price | If solar panels enabled | `Pure Energie Electricity - Current Price` |
+| Percentile sensors | If solar panels enabled | `Pure Energie Electricity - Percentile Price (5)` |
+| Current Price | If gas enabled | `Pure Energie Gas - Current Price` |
+| Percentile sensors | If gas enabled | `Pure Energie Gas - Percentile Price (5)` |
+
+## Configuration
+
+All settings are configured through the UI options flow:
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| Electricity | Boolean | True | Enable electricity sensors |
+| Solar panels | Boolean | False | Enable export sensors |
+| Gas | Boolean | False | Enable gas sensors |
+| Gas element ID | Integer | 13422 | Element identifier for gas |
+| Added costs | Float | 0.0 | Additional import costs |
+| Return costs | Float | 0.0 | Return costs for export |
+| Scan interval | Integer (60–86400) | 3600 | Update interval in seconds |
+| Double meter | Boolean | True | Use double meter reading |
+
+## ApexCharts Integration
+
+The main price sensor exposes `extra_state_attributes["prices"]` which you can map to ApexCharts. Each price record contains:
+
+- `price`: float (price in kWh or m³)
+- `unity`: string (unit of measurement)
+- `date.full`: ISO timestamp (e.g. `2026-09-16 00:00`)
+- `date.label`: human-readable label
+
+Example: map `record.price` to the y-axis and `record.date.label` to the x-axis for a column chart.
 
 ## Installation
-1. Copy the folder to:
-   - `/config/custom_components/pure_energy_custom/`
-2. Restart Home Assistant.
-3. Verify sensors appear under **Entities**.
 
-## ApexCharts example
-The `prices` sensor contains an attribute `prices` which you can map to ApexCharts.
-(Adjust the `entity:` to the actual entity_id created by Home Assistant.)
-
-Example data generator (conceptual):
-- x-axis from `record.date.full`
-- y-axis from `record.price`
+1. Copy the folder to `config/custom_components/pure_energy_prices/`
+2. Restart Home Assistant
+3. Verify sensors appear under **Entities**
