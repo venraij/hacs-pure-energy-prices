@@ -20,7 +20,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-asyncio voluptuous voluptuous-openapi aiohttp
+          pip install pytest pytest-asyncio homeassistant
+          pip install voluptuous voluptuous-openapi voluptuous-serialize
+          pip install aiohttp astral
           
       - name: Run tests
         run: |
