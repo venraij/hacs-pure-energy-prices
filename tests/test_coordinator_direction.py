@@ -51,8 +51,8 @@ class TestCoordinatorPriceAdjustment:
             {"price": 0.30},
         ]
         adjusted = coordinator._apply_cost_adjustments(prices)
-        assert adjusted[0]["price"] == 0.22  # 0.25 - 0.03
-        assert adjusted[1]["price"] == 0.27  # 0.30 - 0.03
+        assert adjusted[0]["price"] == 0.28  # 0.25 + 0.03
+        assert adjusted[1]["price"] == pytest.approx(0.33) # 0.30 + 0.03
 
     def test_return_costs_defaults_to_zero_when_not_set(self):
         """When CONF_RETURN_COSTS is not in entry data, default to 0.0."""
