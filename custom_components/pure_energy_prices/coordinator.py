@@ -1,11 +1,10 @@
-"""Data update coordinator for the Pure Energie Prices integration."""
+"""Coordinator for Pure Energie Prices integration."""
 
 from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import datetime, date, timedelta, timezone
 
 import aiohttp
 from homeassistant.core import HomeAssistant
@@ -40,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 class PureEnergieData:
     """Container for pure Energie API data."""
 
-    def __init__(self, prices: list[dict[str, Any]]) -> None:
+    def __init__(self, prices: list[dict]) -> None:
         """Initialize data container."""
         self.prices = prices
 
@@ -51,7 +50,7 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: Any,
+        entry,
         *,
         element_id: int | None = None,
         commodity: str | None = None,
@@ -84,30 +83,60 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
         """Return the commodity."""
         return self._commodity
 
-    def _apply_cost_adjustments(self, prices: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Apply direction-based cost adjustments to prices."""
-        entry = self._entry
-        added_costs = float(
-            entry.data.get(CONF_ADDED_COSTS, DEFAULT_ADDED_COSTS)
-        )
-        return_costs = float(
-            entry.data.get(CONF_RETURN_COSTS, DEFAULT_RETURN_COSTS)
-        )
+    def _apply_cost_adjustments(
+        self,
+        prices: list[dict],
+        now_dt: datetime | None = None,
+    ) -> list[dict]:
+        """Apply direction-based cost adjustments to prices.
+
+        Only applies cost adjustments to today's prices. Next-day prices
+        are left unchanged because the Pure Energie API doesn't provide
+        cost breakdown data (added_costs/return_costs) for the next day
+        yet - applying defaults would taint the percentile sensors.
+        """
+        if now_dt is None:
+            now_dt = datetime.now(tz=timezone.utc)
+        today_date = now_dt.date()
 
         for record in prices:
+            # Determine the date of this price record
+            record_date = self._get_record_date(record)
+            if record_date is not None and record_date > today_date:
+                # Skip adjustments for future days (no cost data available)
+                continue
+
             if self._direction == "import":
-                # Import: prices include added costs
-                if added_costs > 0:
-                    record["price"] = (
-                        record.get("price", 0.0) + added_costs
-                    )
-            elif self._direction == "export":
-                # Export: add return costs as a subsidy/incentive
-                record["price"] = (
-                    record.get("price", 0.0) + return_costs
+                added_costs = float(
+                    self._entry.data.get(CONF_ADDED_COSTS, DEFAULT_ADDED_COSTS)
                 )
+                if added_costs > 0:
+                    record["price"] = record.get("price", 0.0) + added_costs
+            elif self._direction == "export":
+                return_costs = float(
+                    self._entry.data.get(CONF_RETURN_COSTS, DEFAULT_RETURN_COSTS)
+                )
+                record["price"] = record.get("price", 0.0) + return_costs
 
         return prices
+
+    def _get_record_date(self, record: dict) -> date | None:
+        """Extract the date from a price record's date field."""
+        # Try date.full first (nested structure: record["date"]["full"])
+        date_obj = record.get("date")
+        if isinstance(date_obj, dict):
+            date_str = date_obj.get("full")
+        else:
+            date_str = None
+        if not date_str:
+            # Try top-level "full" field as fallback
+            date_str = record.get("full")
+        if not date_str:
+            return None
+        try:
+            return datetime.fromisoformat(date_str).date()
+        except (ValueError, TypeError):
+            return None
 
     def _build_current_param(self, current_dt: datetime) -> str:
         """Build the 'current' URL parameter in required format: Y-m-d H:M."""
@@ -115,14 +144,11 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
 
     async def _fetch_prices(
         self, current_dt: datetime
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict]:
         """Fetch raw prices from the Pure Energie API."""
         entry = self._entry
         element_id = self._element_id
 
-        base_url = entry.data.get(CONF_BASE_URL, DEFAULT_BASE_URL) or DEFAULT_BASE_URL
-
-        # Determine which commodity to fetch
         commodity = self._commodity
         if commodity is None:
             # Default: use the main element_id for the entry
@@ -145,6 +171,8 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
         business = entry.data.get(CONF_BUSINESS, DEFAULT_BUSINESS)
         double_meter = entry.data.get(CONF_DOUBLE_METER, DEFAULT_DOUBLE_METER)
         solar = entry.data.get(CONF_SOLAR_PANELS, DEFAULT_SOLAR_PANELS)
+
+        base_url = entry.data.get(CONF_BASE_URL, DEFAULT_BASE_URL) or DEFAULT_BASE_URL
 
         url = (
             f"{base_url}"
@@ -191,8 +219,8 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
             _LOGGER.warning("Expected list of price objects but got %s", type(prices))
             return []
 
-        # Apply direction-based cost adjustments
-        return self._apply_cost_adjustments(prices)
+        # Apply direction-based cost adjustments (pass now_dt for date-based skipping)
+        return self._apply_cost_adjustments(prices, now_dt=current_dt)
 
     async def _async_update_data(self) -> PureEnergieData:
         """Fetch the latest data from the Pure Energie API."""
