@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
@@ -113,7 +112,6 @@ class PureEnergiePercentileSensor(SensorEntity):
         data = self.coordinator.data.prices if hasattr(self.coordinator, "data") and self.coordinator.data else []
         if not data:
             return None
-
         # Include all non-zero prices, including future data if provided by API
         prices = []
         for record in data:
@@ -123,15 +121,12 @@ class PureEnergiePercentileSensor(SensorEntity):
             if price == 0:
                 continue
             prices.append(price)
-
         if not prices:
             return None
-
         prices = sorted(prices)
         k = (len(prices) - 1) * self._percentile
         idx = int(k)
         fraction = k - idx
-
         if idx >= len(prices) - 1:
             return round(prices[-1], 2)
         if fraction == 0:
@@ -168,17 +163,17 @@ async def async_setup_entry(
 
     if has_electricity and "electricity_import" in coordinators:
         sensors.append(PureEnergiePriceSensor(coordinators["electricity_import"], config_entry, "electricity", "import", UNIT_EUR_KWH))
-        for percentile in percentiles:
-            sensors.append(PureEnergiePercentileSensor(coordinators["electricity_import"], config_entry, "electricity", "import", UNIT_EUR_KWH, percentile))
+        for p in percentiles:
+            sensors.append(PureEnergiePercentileSensor(coordinators["electricity_import"], config_entry, "electricity", "import", UNIT_EUR_KWH, p))
 
     if has_solar and "electricity_export" in coordinators:
         sensors.append(PureEnergiePriceSensor(coordinators["electricity_export"], config_entry, "electricity", "export", UNIT_EUR_KWH))
-        for percentile in percentiles:
-            sensors.append(PureEnergiePercentileSensor(coordinators["electricity_export"], config_entry, "electricity", "export", UNIT_EUR_KWH, percentile))
+        for p in percentiles:
+            sensors.append(PureEnergiePercentileSensor(coordinators["electricity_export"], config_entry, "electricity", "export", UNIT_EUR_KWH, p))
 
     if has_gas and "gas_import" in coordinators:
         sensors.append(PureEnergiePriceSensor(coordinators["gas_import"], config_entry, "gas", "import", UNIT_EUR_M3))
-        for percentile in percentiles:
-            sensors.append(PureEnergiePercentileSensor(coordinators["gas_import"], config_entry, "gas", "import", UNIT_EUR_M3, percentile))
+        for p in percentiles:
+            sensors.append(PureEnergiePercentileSensor(coordinators["gas_import"], config_entry, "gas", "import", UNIT_EUR_M3, p))
 
     async_add_entities(sensors)

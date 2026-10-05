@@ -39,7 +39,7 @@ class TestCoordinatorCostAdjustments:
         assert adjusted[0]["price"] == pytest.approx(0.25)
 
     def test_import_skips_adjustments_for_next_day(self):
-        """Next-day prices should skip adjustments (no cost data available)."""
+        """Future prices should be adjusted."""
         coordinator = self._make_coordinator(direction="import")
         from datetime import datetime, timedelta, timezone
 
@@ -48,11 +48,11 @@ class TestCoordinatorCostAdjustments:
 
         prices = [
             {"price": 0.20},  # Today: adjusted
-            {"price": 0.25, "date": {"full": tomorrow_str}},  # Tomorrow: skipped
+            {"price": 0.25, "date": {"full": tomorrow_str}},  # Tomorrow: adjusted
         ]
         adjusted = coordinator._apply_cost_adjustments(prices)
         assert adjusted[0]["price"] == pytest.approx(0.25)
-        assert adjusted[1]["price"] == 0.25
+        assert adjusted[1]["price"] == pytest.approx(0.30)
 
     def test_export_applies_return_costs_for_today(self):
         """Export direction should add config CONF_RETURN_COSTS for today's prices."""
@@ -62,7 +62,7 @@ class TestCoordinatorCostAdjustments:
         assert adjusted[0]["price"] == pytest.approx(0.23)
 
     def test_export_skips_adjustments_for_next_day(self):
-        """Export next-day prices skip return costs adjustments."""
+        """Future prices should be adjusted."""
         coordinator = self._make_coordinator(direction="export")
         from datetime import datetime, timedelta, timezone
 
@@ -71,14 +71,14 @@ class TestCoordinatorCostAdjustments:
 
         prices = [
             {"price": 0.25},  # Today: adjusted
-            {"price": 0.30, "date": {"full": tomorrow_str}},  # Tomorrow: skipped
+            {"price": 0.30, "date": {"full": tomorrow_str}},  # Tomorrow: adjusted
         ]
         adjusted = coordinator._apply_cost_adjustments(prices)
         assert adjusted[0]["price"] == pytest.approx(0.28)
-        assert adjusted[1]["price"] == 0.30
+        assert adjusted[1]["price"] == pytest.approx(0.33)
 
     def test_two_days_ahead_prices_skip_adjustments(self):
-        """Prices for dates more than 1 day ahead are also skipped."""
+        """Prices for dates more than 1 day ahead are also adjusted."""
         coordinator = self._make_coordinator(direction="import")
         from datetime import datetime, timedelta, timezone
 
@@ -87,11 +87,11 @@ class TestCoordinatorCostAdjustments:
 
         prices = [
             {"price": 0.20},  # Today: adjusted
-            {"price": 0.22, "date": {"full": two_days_str}},  # Day after tomorrow: skipped
+            {"price": 0.22, "date": {"full": two_days_str}},  # Day after tomorrow: adjusted
         ]
         adjusted = coordinator._apply_cost_adjustments(prices)
         assert adjusted[0]["price"] == pytest.approx(0.25)
-        assert adjusted[1]["price"] == 0.22
+        assert adjusted[1]["price"] == pytest.approx(0.27)
 
     def test_past_day_prices_get_adjustments(self):
         """Past-day prices should also get adjustments."""
