@@ -33,8 +33,7 @@ from custom_components.pure_energy_prices.const import (
     DEFAULT_REDELIVERY_ELEMENT_ID,
     DEFAULT_RETURN_COSTS,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SOLAR_PANELS,
-    DOMAIN,
+    DEFAULT_SOLAR_PANELS
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,7 +113,7 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
             
             # Create new record with adjustments applied
             new_record = dict(record)
-            if self._direction == "import" and added_costs > 0:
+            if self._direction == "import" and self._commodity == CONF_COMMODITY_ELECTRICITY and added_costs > 0:
                 new_record["price"] = price + added_costs
             elif self._direction == "export":
                 new_record["price"] = price - return_costs

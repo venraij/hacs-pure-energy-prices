@@ -3,14 +3,15 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
-from custom_components.pure_energy_prices.const import CONF_RETURN_COSTS
+from custom_components.pure_energy_prices.const import CONF_COMMODITY_ELECTRICITY, CONF_RETURN_COSTS
+from custom_components.pure_energy_prices.const import CONF_COMMODITY_REDELIVERY
 from custom_components.pure_energy_prices.coordinator import PureEnergyCoordinator
 
 
 class TestExportUsesRedelivery:
     """Export should use commodity 'redelivery', not 'electricity'."""
 
-    def _make_coordinator(self, direction="export"):
+    def _make_coordinator(self, direction="export", commodity=CONF_COMMODITY_REDELIVERY):
         entry = MagicMock()
         entry.data = {CONF_RETURN_COSTS: 0.03}
         with patch.object(
@@ -21,6 +22,7 @@ class TestExportUsesRedelivery:
             coordinator = PureEnergyCoordinator.__new__(PureEnergyCoordinator)
             coordinator._entry = entry
             coordinator._direction = direction
+            coordinator._commodity = commodity
             return coordinator
 
     def test_export_subtracts_return_costs(self):
@@ -61,7 +63,7 @@ class TestExportUsesRedelivery:
 
     def test_import_still_adds_costs(self):
         """Import direction should still ADD added_costs (unchanged behavior)."""
-        coordinator = self._make_coordinator(direction="import")
+        coordinator = self._make_coordinator(direction="import", commodity=CONF_COMMODITY_ELECTRICITY)
         coordinator._entry.data["added_costs"] = 0.02
         prices = [{"price": 0.10}]
         result = coordinator._apply_cost_adjustments(prices)
