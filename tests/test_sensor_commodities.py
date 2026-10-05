@@ -58,7 +58,7 @@ async def test_electricity_export_sensor_created_when_solar_panels(mock_hass, en
     # import(1+4) + export(1+4) = 10
     assert len(call_args) == 10
     export_sensor = call_args[5]
-    assert "test_entry_id_electricity" in export_sensor.unique_id
+    assert "redelivery" in export_sensor.unique_id
     assert "export" in export_sensor.unique_id
 
 

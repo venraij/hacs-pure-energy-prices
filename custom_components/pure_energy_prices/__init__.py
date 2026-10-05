@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) 
                 hass,
                 entry,
                 element_id=None,
-                commodity="electricity",
+                commodity=CONF_COMMODITY_REDELIVERY,
                 direction="export",
             )
             await coordinators["electricity_export"].async_config_entry_first_refresh()

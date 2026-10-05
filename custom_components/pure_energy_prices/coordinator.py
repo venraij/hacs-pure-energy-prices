@@ -87,19 +87,21 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
             now_dt = datetime.now(tz=timezone.utc)
         today_date = now_dt.date()
 
+        adjusted = []
         for record in prices:
             record_date = self._get_record_date(record)
             price = record.get("price", 0.0)
             if record_date is not None and record_date > today_date and price == 0:
                 continue
+            adjusted.append(record)
             if self._direction == "import":
                 added_costs = float(self._entry.data.get(CONF_ADDED_COSTS, DEFAULT_ADDED_COSTS))
                 if added_costs > 0:
-                    record["price"] = record.get("price", 0.0) + added_costs
+                    adjusted[-1]["price"] = record.get("price", 0.0) + added_costs
             elif self._direction == "export":
                 return_costs = float(self._entry.data.get(CONF_RETURN_COSTS, DEFAULT_RETURN_COSTS))
-                record["price"] = record.get("price", 0.0) - return_costs
-        return prices
+                adjusted[-1]["price"] = record.get("price", 0.0) - return_costs
+        return adjusted
 
     def _get_record_date(self, record: dict) -> date | None:
         """Extract the date from a price record's date field."""

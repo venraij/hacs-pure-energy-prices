@@ -59,7 +59,7 @@ class TestCoordinatorCostAdjustments:
         coordinator = self._make_coordinator(direction="export")
         prices = [{"price": 0.20}]
         adjusted = coordinator._apply_cost_adjustments(prices)
-        assert adjusted[0]["price"] == pytest.approx(0.23)
+        assert adjusted[0]["price"] == pytest.approx(0.17)  # 0.20 - 0.03 (subtracted)
 
     def test_export_skips_adjustments_for_next_day(self):
         """Future prices should be adjusted."""
@@ -74,8 +74,8 @@ class TestCoordinatorCostAdjustments:
             {"price": 0.30, "date": {"full": tomorrow_str}},  # Tomorrow: adjusted
         ]
         adjusted = coordinator._apply_cost_adjustments(prices)
-        assert adjusted[0]["price"] == pytest.approx(0.28)
-        assert adjusted[1]["price"] == pytest.approx(0.33)
+        assert adjusted[0]["price"] == pytest.approx(0.22)  # 0.25 - 0.03 (subtracted)
+        assert adjusted[1]["price"] == pytest.approx(0.27)  # 0.30 - 0.03 (subtracted)
 
     def test_two_days_ahead_prices_skip_adjustments(self):
         """Prices for dates more than 1 day ahead are also adjusted."""
