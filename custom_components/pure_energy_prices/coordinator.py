@@ -96,7 +96,7 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
             Skips zero-priced future records.
         """
         if now_dt is None:
-            now_dt = datetime.now(tz=timezone.utc)
+            now_dt = datetime.now()
         today_date = now_dt.date()
 
         added_costs = float(self._entry.data.get(CONF_ADDED_COSTS, DEFAULT_ADDED_COSTS))
@@ -225,7 +225,7 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
     async def _async_update_data(self) -> PureEnergieData:
         """Fetch the latest data from the Pure Energie API."""
         try:
-            now_dt = datetime.now(tz=timezone.utc)
+            now_dt = datetime.now()
             prices = await self._fetch_prices(now_dt)
             next_dt = now_dt + timedelta(hours=24)
             more_prices = await self._fetch_prices(next_dt)

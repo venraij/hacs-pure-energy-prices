@@ -43,7 +43,7 @@ class TestCoordinatorCostAdjustments:
         coordinator = self._make_coordinator(direction="import")
         from datetime import datetime, timedelta, timezone
 
-        tomorrow = datetime.now(tz=timezone.utc) + timedelta(days=1)
+        tomorrow = datetime.now() + timedelta(days=1)
         tomorrow_str = tomorrow.strftime("%Y-%m-%d") + "T00:00"
 
         prices = [
@@ -66,7 +66,7 @@ class TestCoordinatorCostAdjustments:
         coordinator = self._make_coordinator(direction="export")
         from datetime import datetime, timedelta, timezone
 
-        tomorrow = datetime.now(tz=timezone.utc) + timedelta(days=1)
+        tomorrow = datetime.now() + timedelta(days=1)
         tomorrow_str = tomorrow.strftime("%Y-%m-%d") + "T00:00"
 
         prices = [
@@ -82,7 +82,7 @@ class TestCoordinatorCostAdjustments:
         coordinator = self._make_coordinator(direction="import")
         from datetime import datetime, timedelta, timezone
 
-        two_days = datetime.now(tz=timezone.utc) + timedelta(days=2)
+        two_days = datetime.now() + timedelta(days=2)
         two_days_str = two_days.strftime("%Y-%m-%d") + "T00:00"
 
         prices = [
@@ -98,7 +98,7 @@ class TestCoordinatorCostAdjustments:
         coordinator = self._make_coordinator(direction="import")
         from datetime import datetime, timedelta, timezone
 
-        yesterday = datetime.now(tz=timezone.utc) - timedelta(days=1)
+        yesterday = datetime.now() - timedelta(days=1)
         yesterday_str = yesterday.strftime("%Y-%m-%d") + "T00:00"
 
         prices = [{"price": 0.20, "date": {"full": yesterday_str}}]

@@ -53,7 +53,7 @@ class TestExportUsesRedelivery:
 
         coordinator = self._make_coordinator(direction="export")
         coordinator._commodity = "redelivery"
-        tomorrow = datetime.now(tz=timezone.utc) + timedelta(days=1)
+        tomorrow = datetime.now() + timedelta(days=1)
         tomorrow_str = tomorrow.strftime("%Y-%m-%dT00:00")
 
         prices = [{"price": 0.0, "date": {"full": tomorrow_str}}]
