@@ -82,25 +82,41 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
         return self._commodity
 
     def _apply_cost_adjustments(self, prices: list[dict], now_dt: datetime | None = None) -> list[dict]:
-        """Apply direction-based cost adjustments to prices."""
+        """Apply direction-based cost adjustments to prices.
+        
+        Args:
+            prices: List of price records from API
+            now_dt: Current datetime for date comparison (defaults to now UTC)
+            
+        Returns:
+            List of price records with cost adjustments applied.
+            Skips zero-priced future records.
+        """
         if now_dt is None:
             now_dt = datetime.now(tz=timezone.utc)
         today_date = now_dt.date()
+
+        added_costs = float(self._entry.data.get(CONF_ADDED_COSTS, DEFAULT_ADDED_COSTS))
+        return_costs = float(self._entry.data.get(CONF_RETURN_COSTS, DEFAULT_RETURN_COSTS))
 
         adjusted = []
         for record in prices:
             record_date = self._get_record_date(record)
             price = record.get("price", 0.0)
+            
+            # Skip zero-priced records for future dates
             if record_date is not None and record_date > today_date and price == 0:
                 continue
-            adjusted.append(record)
-            if self._direction == "import":
-                added_costs = float(self._entry.data.get(CONF_ADDED_COSTS, DEFAULT_ADDED_COSTS))
-                if added_costs > 0:
-                    adjusted[-1]["price"] = record.get("price", 0.0) + added_costs
+            
+            # Create new record with adjustments applied
+            new_record = dict(record)
+            if self._direction == "import" and added_costs > 0:
+                new_record["price"] = price + added_costs
             elif self._direction == "export":
-                return_costs = float(self._entry.data.get(CONF_RETURN_COSTS, DEFAULT_RETURN_COSTS))
-                adjusted[-1]["price"] = record.get("price", 0.0) - return_costs
+                new_record["price"] = price - return_costs
+            
+            adjusted.append(new_record)
+        
         return adjusted
 
     def _get_record_date(self, record: dict) -> date | None:
@@ -161,24 +177,36 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
 
         session = async_get_clientsession(self.hass)
         _LOGGER.debug("Calling Pure Energie API with URL: %s", url)
-        resp = await session.get(url)
-        resp.raise_for_status()
+        try:
+            resp = await session.get(url, timeout=30)
+            resp.raise_for_status()
+        except aiohttp.ClientError as e:
+            raise UpdateFailed(f"API request failed: {e}") from e
 
         content_type = resp.content_type.split(";")[0].strip().lower() if hasattr(resp, "content_type") else "unknown"
         _LOGGER.debug("Pure Energie API Content-Type: %s", content_type)
 
         raw_json = await resp.read()
+        if not raw_json:
+            raise UpdateFailed("Empty response from API")
+        
         try:
             text_content = raw_json.decode("utf-8", errors="replace")
             if not text_content.strip():
-                raise UpdateFailed("Empty response")
+                raise UpdateFailed("Empty response body")
+            
+            # Try to parse as pure JSON first
+            payload = json.loads(text_content.strip())
+        except json.JSONDecodeError:
+            # If that fails, look for JSON embedded in HTML (common with some APIs)
             html_start = text_content.find("{")
             if html_start >= 0:
-                payload = json.loads(text_content[html_start:].strip())
+                try:
+                    payload = json.loads(text_content[html_start:].strip())
+                except json.JSONDecodeError as e:
+                    raise UpdateFailed(f"Invalid JSON in HTML-wrapped response: {e}") from e
             else:
-                payload = json.loads(text_content.strip())
-        except json.JSONDecodeError as e:
-            raise UpdateFailed(f"Invalid JSON in response: {e}") from e
+                raise UpdateFailed("No JSON found in response")
 
         prices = payload.get("prices") or []
         if not isinstance(prices, list):

@@ -43,7 +43,7 @@ class PureEnergiePriceSensor(SensorEntity):
             "identifiers": {(DOMAIN, config_entry.entry_id)},
             "name": "Pure Energie",
             "manufacturer": "Pure Energie",
-            "model": f"Dynamic Pricing ({commodity} {direction})",
+            "model": "Dynamic Pricing",
         }
         self.coordinator = coordinator
         self.config_entry = config_entry
@@ -101,7 +101,7 @@ class PureEnergiePercentileSensor(SensorEntity):
             "identifiers": {(DOMAIN, config_entry.entry_id)},
             "name": "Pure Energie",
             "manufacturer": "Pure Energie",
-            "model": f"Dynamic Pricing ({commodity} {direction})",
+            "model": "Dynamic Pricing",
         }
         self.coordinator = coordinator
         self.config_entry = config_entry
