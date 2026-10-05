@@ -174,7 +174,7 @@ async def async_setup_entry(
             sensors.append(PureEnergiePercentileSensor(coordinators["electricity_import"], config_entry, "electricity", "import", UNIT_EUR_KWH, p))
 
     if has_solar and "electricity_export" in coordinators:
-        sensors.append(PureEnergiePriceSensor(coordinators["electricity_export"], config_entry, "electricity", "export", UNIT_EUR_KWH))
+        sensors.append(PureEnergiePriceSensor(coordinators["electricity_export"], config_entry, "redelivery", "export", UNIT_EUR_KWH))
         for p in percentiles:
             sensors.append(PureEnergiePercentileSensor(coordinators["electricity_export"], config_entry, "electricity", "export", UNIT_EUR_KWH, p))
 
