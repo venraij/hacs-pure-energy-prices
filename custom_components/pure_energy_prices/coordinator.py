@@ -29,6 +29,7 @@ from custom_components.pure_energy_prices.const import (
     DEFAULT_BASE_URL,
     DEFAULT_BUSINESS,
     DEFAULT_DOUBLE_METER,
+    DEFAULT_ELEMENT_ID,
     DEFAULT_GAS_ELEMENT_ID,
     DEFAULT_REDELIVERY_ELEMENT_ID,
     DEFAULT_RETURN_COSTS,

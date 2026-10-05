@@ -32,7 +32,6 @@ DEFAULT_BUSINESS = False
 DEFAULT_DOUBLE_METER = True
 DEFAULT_SOLAR_PANELS = False
 DEFAULT_PERCENTILES = "0.05,0.1,0.2,0.4"
-DEFAULT_COMMODITIES = ["electricity"]
 
 # --- Units of measurement ---
 UNIT_KWH = "kWh"
