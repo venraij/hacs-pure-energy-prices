@@ -17,8 +17,11 @@ from custom_components.pure_energy_prices.const import (
     CONF_BUSINESS,
     CONF_COMMODITY_ELECTRICITY,
     CONF_COMMODITY_GAS,
+    CONF_COMMODITY_REDELIVERY,
     CONF_DOUBLE_METER,
+    CONF_ELEMENT_ID,
     CONF_GAS_ELEMENT_ID,
+    CONF_REDELIVERY_ELEMENT_ID,
     CONF_RETURN_COSTS,
     CONF_SCAN_INTERVAL,
     CONF_SOLAR_PANELS,
@@ -27,6 +30,7 @@ from custom_components.pure_energy_prices.const import (
     DEFAULT_BUSINESS,
     DEFAULT_DOUBLE_METER,
     DEFAULT_GAS_ELEMENT_ID,
+    DEFAULT_REDELIVERY_ELEMENT_ID,
     DEFAULT_RETURN_COSTS,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SOLAR_PANELS,
@@ -154,8 +158,10 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
 
         if commodity == CONF_COMMODITY_GAS:
             element_id = entry.data.get(CONF_GAS_ELEMENT_ID, DEFAULT_GAS_ELEMENT_ID)
+        elif commodity == CONF_COMMODITY_REDELIVERY:
+            element_id = entry.data.get(CONF_REDELIVERY_ELEMENT_ID, DEFAULT_REDELIVERY_ELEMENT_ID)
         else:
-            element_id = element_id or entry.data.get("element_id", 11480)
+            element_id = element_id or entry.data.get(CONF_ELEMENT_ID, DEFAULT_ELEMENT_ID)
 
         current_param = self._build_current_param(current_dt)
 

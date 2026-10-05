@@ -13,6 +13,7 @@ CONF_COMMODITY_REDELIVERY = "redelivery"
 CONF_DOUBLE_METER = "double_meter"
 CONF_GAS_ELEMENT_ID = "gas_element_id"
 CONF_HORIZON_HOURS = "horizon_hours"
+CONF_REDELIVERY_ELEMENT_ID = "redelivery_element_id"
 CONF_RETURN_COSTS = "return_costs"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_PERCENTILES = "percentiles"
@@ -20,8 +21,9 @@ CONF_SOLAR_PANELS = "solar_panels"
 
 # --- Default values ---
 DEFAULT_BASE_URL = "https://pure-energie.nl/api/prices-element/dynamic"
-DEFAULT_ELEMENT_ID = 11480
-DEFAULT_GAS_ELEMENT_ID = 11481
+DEFAULT_ELEMENT_ID = 13422
+DEFAULT_GAS_ELEMENT_ID = 13422
+DEFAULT_REDELIVERY_ELEMENT_ID = 13422
 DEFAULT_HORIZON_HOURS = 48
 DEFAULT_ADDED_COSTS = 0.0
 DEFAULT_RETURN_COSTS = 0.0
