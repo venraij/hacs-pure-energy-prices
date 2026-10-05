@@ -98,7 +98,7 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
                     record["price"] = record.get("price", 0.0) + added_costs
             elif self._direction == "export":
                 return_costs = float(self._entry.data.get(CONF_RETURN_COSTS, DEFAULT_RETURN_COSTS))
-                record["price"] = record.get("price", 0.0) + return_costs
+                record["price"] = record.get("price", 0.0) - return_costs
         return prices
 
     def _get_record_date(self, record: dict) -> date | None:
