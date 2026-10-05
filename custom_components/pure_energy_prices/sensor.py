@@ -58,9 +58,16 @@ class PureEnergiePriceSensor(SensorEntity):
     def native_value(self) -> float | None:
         """Return the current price."""
         data = self.coordinator.data.prices if hasattr(self.coordinator, "data") and self.coordinator.data else []
-        if isinstance(data, list) and len(data) > 0:
-            price = data[0].get("price", 0.0)
-            return round(price, 2)
+        if not data or not isinstance(data, list):
+            return None
+        # Try to find the entry marked as current by the API
+        for entry in data:
+            date_info = entry.get("date", {})
+            if isinstance(date_info, dict) and date_info.get("current"):
+                return round(entry.get("price", 0.0), 2)
+        # Fallback: use the first entry (e.g., if API didn't mark any as current)
+        if len(data) > 0:
+            return round(data[0].get("price", 0.0), 2)
         return None
 
     @property
