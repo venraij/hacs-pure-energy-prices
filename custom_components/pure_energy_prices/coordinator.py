@@ -114,7 +114,10 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
             
             # Create new record with adjustments applied
             new_record = dict(record)
-            if self._direction == "import" and self._commodity == CONF_COMMODITY_ELECTRICITY and added_costs > 0:
+            if self._commodity == CONF_COMMODITY_GAS:
+                # Gas always reflects base API prices only; no added/return costs
+                pass
+            elif self._direction == "import" and self._commodity == CONF_COMMODITY_ELECTRICITY and added_costs > 0:
                 new_record["price"] = price + added_costs
             elif self._direction == "export":
                 new_record["price"] = price - return_costs
