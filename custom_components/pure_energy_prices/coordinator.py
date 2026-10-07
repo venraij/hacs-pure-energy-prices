@@ -119,7 +119,7 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
                 pass
             elif self._direction == "import" and self._commodity == CONF_COMMODITY_ELECTRICITY and added_costs > 0:
                 new_record["price"] = price + added_costs
-            elif self._direction == "export":
+            elif self._direction == "export" and self._commodity != CONF_COMMODITY_GAS:
                 new_record["price"] = price - return_costs
             
             adjusted.append(new_record)
