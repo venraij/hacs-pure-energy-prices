@@ -56,13 +56,22 @@ After setup, access options via the integration options flow to update:
 
 Each config entry creates:
 
-- **Electricity Import**: Current import price sensor + percentile sensors
+- **Electricity Import**: Import price for the current hour + percentile sensors
 - **Electricity Export**: Export price sensor + percentile sensors (when solar panels enabled)
 - **Percentile Sensors**: Multiple percentile price sensors per direction (5th, 10th, 20th, 40th by default)
 
 ### Gas Sensors
 
 - **Gas Import**: Current gas price sensor + percentile sensors
+
+### Updates
+
+- Prices are fetched from the API every **scan interval** (default: every hour).
+- The price sensors show the price of the **current hour** in Home Assistant's
+  local time zone, matched on `date.full`, and update at the start of every
+  hour, even between fetches.
+- If the current hour is not in the fetched data, the sensor falls back to the
+  entry the API marked as `current`, and then to the first entry.
 
 ### Sensor Naming
 
@@ -102,7 +111,7 @@ The integration fetches prices from the Pure Energie API using:
 - `double_meter`: true/false
 - `solar_panels`: true/false
 - `commodity`: electricity or gas
-- `current`: Current timestamp
+- `current`: Current local timestamp (Home Assistant time zone)
 - `business`: true/false
 - `element_id`: Element identifier
 
