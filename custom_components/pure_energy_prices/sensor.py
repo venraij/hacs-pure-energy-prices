@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+from homeassistant.util import dt as dt_util
 
 from custom_components.pure_energy_prices.const import (
     CONF_COMMODITY_ELECTRICITY,
@@ -25,7 +31,23 @@ from custom_components.pure_energy_prices.const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class PureEnergiePriceSensor(SensorEntity):
+def get_current_price_record(
+    prices: list[dict[str, Any]], now: datetime
+) -> dict[str, Any] | None:
+    """Return the price record for the hour that contains ``now``.
+
+    The API labels each record with its local start time in ``date.full``
+    (e.g. ``"2026-10-05 17:00"``), so ``now`` must be in local time.
+    """
+    current_hour = now.strftime("%Y-%m-%d %H:00")
+    for record in prices:
+        date = record.get("date")
+        if isinstance(date, dict) and date.get("full") == current_hour:
+            return record
+    return None
+
+
+class PureEnergiePriceSensor(CoordinatorEntity, SensorEntity):
     """Sensor entity for displaying pure energy prices."""
 
     _attr_has_entity_name = True
@@ -39,13 +61,13 @@ class PureEnergiePriceSensor(SensorEntity):
         unit_of_measurement: str = UNIT_EUR_KWH,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._attr_device_info = {
             "identifiers": {(DOMAIN, config_entry.entry_id)},
             "name": "Pure Energie",
             "manufacturer": "Pure Energie",
             "model": f"Dynamic Pricing ({commodity} {direction})",
         }
-        self.coordinator = coordinator
         self.config_entry = config_entry
         self._commodity = commodity
         self._direction = direction
@@ -54,13 +76,37 @@ class PureEnergiePriceSensor(SensorEntity):
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_suggested_display_precision = 2
 
+    async def async_added_to_hass(self) -> None:
+        """Update the state at the start of every hour.
+
+        The coordinator only fetches new data every scan interval, but the
+        current price changes every hour, so re-evaluate it on the hour.
+        """
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_track_time_change(
+                self.hass, self._async_hour_changed, minute=0, second=0
+            )
+        )
+
+    @callback
+    def _async_hour_changed(self, now: datetime) -> None:
+        """Write the new current price when the hour changes."""
+        self.async_write_ha_state()
+
     @property
     def native_value(self) -> float | None:
         """Return the current price."""
         data = self.coordinator.data.prices if hasattr(self.coordinator, "data") and self.coordinator.data else []
         if not data or not isinstance(data, list):
             return None
-        # Try to find the entry marked as current by the API
+        # Use the entry for the current local hour. The API's `current` flag
+        # is only correct at fetch time, so it can lag behind by up to a
+        # scan interval.
+        record = get_current_price_record(data, dt_util.now())
+        if record is not None:
+            return round(record.get("price", 0.0), 2)
+        # Fallback: the entry marked as current by the API
         for entry in data:
             date_info = entry.get("date", {})
             if isinstance(date_info, dict) and date_info.get("current"):
@@ -82,7 +128,7 @@ class PureEnergiePriceSensor(SensorEntity):
         return {"prices": data}
 
 
-class PureEnergiePercentileSensor(SensorEntity):
+class PureEnergiePercentileSensor(CoordinatorEntity, SensorEntity):
     """Sensor entity for displaying percentile prices."""
 
     _attr_has_entity_name = True
@@ -97,13 +143,13 @@ class PureEnergiePercentileSensor(SensorEntity):
         percentile: float = 0.1,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._attr_device_info = {
             "identifiers": {(DOMAIN, config_entry.entry_id)},
             "name": "Pure Energie",
             "manufacturer": "Pure Energie",
             "model": f"Dynamic Pricing ({commodity} {direction})",
         }
-        self.coordinator = coordinator
         self.config_entry = config_entry
         self._commodity = commodity
         self._direction = direction

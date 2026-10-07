@@ -10,6 +10,7 @@ import aiohttp
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from custom_components.pure_energy_prices.const import (
     CONF_ADDED_COSTS,
@@ -119,7 +120,7 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
                 pass
             elif self._direction == "import" and self._commodity == CONF_COMMODITY_ELECTRICITY and added_costs > 0:
                 new_record["price"] = price + added_costs
-            elif self._direction == "export" and self._commodity != CONF_COMMODITY_GAS:
+            elif self._direction == "export":
                 new_record["price"] = price - return_costs
             
             adjusted.append(new_record)
@@ -229,7 +230,9 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
     async def _async_update_data(self) -> PureEnergieData:
         """Fetch the latest data from the Pure Energie API."""
         try:
-            now_dt = datetime.now()
+            # Home Assistant's time zone: the API uses local time to pick the
+            # day and mark the current hour
+            now_dt = dt_util.now()
             prices = await self._fetch_prices(now_dt)
             next_dt = now_dt + timedelta(hours=24)
             more_prices = await self._fetch_prices(next_dt)
