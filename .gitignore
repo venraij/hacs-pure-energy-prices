@@ -17,6 +17,8 @@ package-lock.json
 coverage.xml
 .ruff_cache
 
+# hermes agent
+.hermes/
 
 # Home Assistant configuration
 config/*

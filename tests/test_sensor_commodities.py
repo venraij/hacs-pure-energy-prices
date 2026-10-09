@@ -19,7 +19,8 @@ async def test_electricity_import_sensor_created_by_default(mock_hass, entry_wit
     add_entities_mock = MagicMock()
     await async_setup_entry(mock_hass, entry_with_electricity, add_entities_mock)
     call_args = add_entities_mock.call_args[0][0]
-    assert len(call_args) == 5
+    # Should include raw import sensor too (6 total now)
+    assert len(call_args) == 6
     entity = call_args[0]
     assert "test_entry_id_electricity" in entity.unique_id
     assert "import" in entity.unique_id
@@ -31,9 +32,10 @@ async def test_gas_import_sensor_created_when_gas_checked(mock_hass, entry_with_
     add_entities_mock = MagicMock()
     await async_setup_entry(mock_hass, entry_with_gas, add_entities_mock)
     call_args = add_entities_mock.call_args[0][0]
-    assert len(call_args) == 10
+    # import(1+4+1raw) + gas(1+4) = 11 sensors
+    assert len(call_args) == 11
     # Gas import sensor should be at index 5 (after electricity: import + 4 pct)
-    gas_sensor = call_args[5]
+    gas_sensor = call_args[6]
     assert "test_entry_id_gas" in gas_sensor.unique_id
     assert "import" in gas_sensor.unique_id
 
@@ -44,8 +46,8 @@ async def test_gas_import_sensor_not_created_when_gas_not_checked(mock_hass, ent
     add_entities_mock = MagicMock()
     await async_setup_entry(mock_hass, entry_with_electricity, add_entities_mock)
     call_args = add_entities_mock.call_args[0][0]
-    # Should only have electricity import sensors (5)
-    assert len(call_args) == 5
+    # Should only have electricity import sensors (6 now with raw)
+    assert len(call_args) == 6
     assert not any("pure_energie_gas" in e.unique_id for e in call_args)
 
 
@@ -55,9 +57,9 @@ async def test_electricity_export_sensor_created_when_solar_panels(mock_hass, en
     add_entities_mock = MagicMock()
     await async_setup_entry(mock_hass, entry_with_solar, add_entities_mock)
     call_args = add_entities_mock.call_args[0][0]
-    # import(1+4) + export(1+4) = 10
-    assert len(call_args) == 10
-    export_sensor = call_args[5]
+    # import(1+4+1raw) + export(1+4+1raw) = 12
+    assert len(call_args) == 12
+    export_sensor = call_args[6]
     assert "redelivery" in export_sensor.unique_id
     assert "export" in export_sensor.unique_id
 
@@ -68,8 +70,8 @@ async def test_electricity_export_sensor_not_created_when_solar_panels_false(moc
     add_entities_mock = MagicMock()
     await async_setup_entry(mock_hass, entry_with_electricity, add_entities_mock)
     call_args = add_entities_mock.call_args[0][0]
-    # Only import (5), no export
-    assert len(call_args) == 5
+    # import(0) + pct(1-4) + raw(5) = 6 sensors
+    assert len(call_args) == 6
     assert not any("export" in e.unique_id for e in call_args)
 
 

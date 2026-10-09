@@ -191,6 +191,71 @@ class PureEnergiePercentileSensor(CoordinatorEntity, SensorEntity):
         """Return the state class of the sensor."""
         return SensorStateClass.MEASUREMENT
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the raw price history for graphing."""
+        data = self.coordinator.data.raw_prices if hasattr(self.coordinator, "data") and self.coordinator.data else []
+        return {"prices": data}
+
+class PureEnergieRawPriceSensor(CoordinatorEntity, SensorEntity):
+    """Sensor entity for displaying raw (kale) prices without cost adjustments."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        commodity: str = "electricity",
+        direction: str = "import",
+        unit_of_measurement: str = UNIT_EUR_KWH,
+    ) -> None:
+        """Initialize the raw price sensor."""
+        super().__init__(coordinator)
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, config_entry.entry_id)},
+            "name": "Pure Energie",
+            "manufacturer": "Pure Energie",
+            "model": f"Dynamic Pricing ({commodity} {direction})",
+        }
+        self.config_entry = config_entry
+        self._commodity = commodity
+        self._direction = direction
+        self._attr_name = f"{commodity.title()} {direction.title()} (raw)"
+        self._attr_unique_id = f"{config_entry.entry_id}_{commodity}_{direction}_raw"
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_suggested_display_precision = 2
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the raw (unadjusted) price from the API."""
+        data = self.coordinator.data.raw_prices if hasattr(self.coordinator, "data") and self.coordinator.data else []
+        if not data:
+            return None
+        # Use the entry for the current local hour. The API's `current` flag
+        # is only correct at fetch time, so it can lag behind by up to a
+        # scan interval.
+        record = get_current_price_record(data, dt_util.now())
+        if record is not None:
+            return round(record.get("price", 0.0), 2)
+        # Fallback: use the first entry (e.g., if API didn't mark any as current)
+        if len(data) > 0:
+            return round(data[0].get("price", 0.0), 2)
+        return None
+
+    @property
+    def state_class(self) -> SensorStateClass:
+        """Return the state class of the sensor."""
+        return SensorStateClass.MEASUREMENT
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the raw price history for graphing."""
+        data = self.coordinator.data.raw_prices if hasattr(self.coordinator, "data") and self.coordinator.data else []
+        return {"prices": data}
+
+
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -228,5 +293,29 @@ async def async_setup_entry(
         sensors.append(PureEnergiePriceSensor(coordinators["gas_import"], config_entry, "gas", "import", UNIT_EUR_M3))
         for p in percentiles:
             sensors.append(PureEnergiePercentileSensor(coordinators["gas_import"], config_entry, "gas", "import", UNIT_EUR_M3, p))
+
+
+    # Raw (kale) price sensors
+    if has_electricity and "electricity_import" in coordinators:
+        sensors.append(
+            PureEnergieRawPriceSensor(
+                coordinators["electricity_import"],
+                config_entry,
+                "electricity",
+                "import",
+                UNIT_EUR_KWH,
+            )
+        )
+
+    if has_solar and "electricity_export" in coordinators:
+        sensors.append(
+            PureEnergieRawPriceSensor(
+                coordinators["electricity_export"],
+                config_entry,
+                "redelivery",
+                "export",
+                UNIT_EUR_KWH,
+            )
+        )
 
     async_add_entities(sensors)
