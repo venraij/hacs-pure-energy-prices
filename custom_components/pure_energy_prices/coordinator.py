@@ -44,9 +44,10 @@ _LOGGER = logging.getLogger(__name__)
 class PureEnergieData:
     """Container for pure Energie API data."""
 
-    def __init__(self, prices: list[dict]) -> None:
+    def __init__(self, prices: list[dict], raw_prices: list[dict] | None = None) -> None:
         """Initialize data container."""
         self.prices = prices
+        self.raw_prices = raw_prices if raw_prices is not None else prices
 
 
 class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
@@ -223,9 +224,9 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
             _LOGGER.warning("Expected list of price objects but got %s", type(prices))
             return []
 
-        # Filter out -0 records
-        filtered_prices = [p for p in prices if p.get("price", 0) != 0]
-        return self._apply_cost_adjustments(filtered_prices, now_dt=current_dt)
+        # Filter out -0 records (raw, before cost adjustments)
+        raw_prices = [p for p in prices if p.get("price", 0) != 0]
+        return raw_prices
 
     async def _async_update_data(self) -> PureEnergieData:
         """Fetch the latest data from the Pure Energie API."""
@@ -233,13 +234,16 @@ class PureEnergyCoordinator(DataUpdateCoordinator[PureEnergieData]):
             # Home Assistant's time zone: the API uses local time to pick the
             # day and mark the current hour
             now_dt = dt_util.now()
-            prices = await self._fetch_prices(now_dt)
+            raw_prices = await self._fetch_prices(now_dt)
             next_dt = now_dt + timedelta(hours=24)
-            more_prices = await self._fetch_prices(next_dt)
-            prices.extend(more_prices)
+            more_raw = await self._fetch_prices(next_dt)
+            raw_prices.extend(more_raw)
 
-            _LOGGER.debug("Fetched %d prices for %s/%s", len(prices), self._commodity or "default", self._direction)
-            return PureEnergieData(prices)
+            # Apply cost adjustments to get adjusted prices
+            adjusted_prices = self._apply_cost_adjustments(raw_prices, now_dt=now_dt)
+
+            _LOGGER.debug("Fetched %d raw prices for %s/%s", len(raw_prices), self._commodity or "default", self._direction)
+            return PureEnergieData(adjusted_prices, raw_prices)
         except UpdateFailed:
             raise
         except Exception as e:
