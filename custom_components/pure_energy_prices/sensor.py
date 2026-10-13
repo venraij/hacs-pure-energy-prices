@@ -47,7 +47,29 @@ def get_current_price_record(
     return None
 
 
-class PureEnergiePriceSensor(CoordinatorEntity, SensorEntity):
+class PureEnergieHourlyPriceSensor(CoordinatorEntity, SensorEntity):
+    """Base for sensors that show the price of the current hour."""
+
+    async def async_added_to_hass(self) -> None:
+        """Update the state at the start of every hour.
+
+        The coordinator only fetches new data every scan interval, but the
+        current price changes every hour, so re-evaluate it on the hour.
+        """
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_track_time_change(
+                self.hass, self._async_hour_changed, minute=0, second=0
+            )
+        )
+
+    @callback
+    def _async_hour_changed(self, now: datetime) -> None:
+        """Write the new current price when the hour changes."""
+        self.async_write_ha_state()
+
+
+class PureEnergiePriceSensor(PureEnergieHourlyPriceSensor):
     """Sensor entity for displaying pure energy prices."""
 
     _attr_has_entity_name = True
@@ -75,24 +97,6 @@ class PureEnergiePriceSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{config_entry.entry_id}_{commodity}_{direction}"
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_suggested_display_precision = 2
-
-    async def async_added_to_hass(self) -> None:
-        """Update the state at the start of every hour.
-
-        The coordinator only fetches new data every scan interval, but the
-        current price changes every hour, so re-evaluate it on the hour.
-        """
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            async_track_time_change(
-                self.hass, self._async_hour_changed, minute=0, second=0
-            )
-        )
-
-    @callback
-    def _async_hour_changed(self, now: datetime) -> None:
-        """Write the new current price when the hour changes."""
-        self.async_write_ha_state()
 
     @property
     def native_value(self) -> float | None:
@@ -197,7 +201,7 @@ class PureEnergiePercentileSensor(CoordinatorEntity, SensorEntity):
         data = self.coordinator.data.raw_prices if hasattr(self.coordinator, "data") and self.coordinator.data else []
         return {"prices": data}
 
-class PureEnergieRawPriceSensor(CoordinatorEntity, SensorEntity):
+class PureEnergieRawPriceSensor(PureEnergieHourlyPriceSensor):
     """Sensor entity for displaying raw (kale) prices without cost adjustments."""
 
     _attr_has_entity_name = True
